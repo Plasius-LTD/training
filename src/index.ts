@@ -157,12 +157,22 @@ function assertPositiveSafeInteger(value: number, label: string): void {
   }
 }
 
+const iso8601DateRegex =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function assertValidUpdatedAtIso(value: string): void {
+  if (!iso8601DateRegex.test(value) || Number.isNaN(Date.parse(value))) {
+    throw new Error("updatedAtIso must be an ISO-8601 timestamp");
+  }
+}
+
 export function createTrainingProgressionRecord(
   input: TrainingProgressionRecord
 ): TrainingProgressionRecord {
   assertNonEmptyString(input.playerSubjectId, "playerSubjectId");
   assertNonEmptyString(input.institutionId, "institutionId");
   assertNonEmptyString(input.updatedAtIso, "updatedAtIso");
+  assertValidUpdatedAtIso(input.updatedAtIso);
 
   if (!isMccExpressionTrack(input.track)) {
     throw new Error("track must be a supported MCC expression track");
