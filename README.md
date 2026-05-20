@@ -25,6 +25,7 @@ npm install @plasius/training
 - schools, barracks, academies, and apprenticeships
 - institutional trust and eligibility state
 - internalized, externalized, and hybrid specialization state
+- privacy-safe progression payloads and large-cohort scale assumptions for institutional training flows
 
 ## Demo
 
@@ -36,7 +37,12 @@ node demo/example.mjs
 ## Usage
 
 ```ts
-import { createTrainingInstitution } from "@plasius/training";
+import {
+  createTrainingInstitution,
+  createTrainingProgressionRecord,
+  defaultTrainingScaleAssumptions,
+  trainingPrivacyScaleRollout,
+} from "@plasius/training";
 
 const academy = createTrainingInstitution({
   institutionId: "academy-1",
@@ -45,8 +51,36 @@ const academy = createTrainingInstitution({
   eligible: true,
 });
 
-console.log(academy.track);
+const progression = createTrainingProgressionRecord({
+  playerSubjectId: "player-sub-1",
+  institutionId: academy.institutionId,
+  track: academy.track,
+  trustLevel: "trusted",
+  eligible: academy.eligible,
+  updatedAtIso: new Date().toISOString(),
+});
+
+console.log(trainingPrivacyScaleRollout.featureFlagId);
+console.log(defaultTrainingScaleAssumptions.maxLearnersPerInstitution);
+console.log(progression.playerSubjectId);
 ```
+
+## Privacy And Scale Baseline
+
+The package exports an inherited rollout descriptor for the cross-repo feature
+flag `isekai.training-progression.privacy-scale.enabled`.
+
+When that rollout is enabled, package consumers should prefer the minimal
+`TrainingProgressionRecord` contract:
+
+- `playerSubjectId` is the only player-linked identifier and is expected to be
+  pseudonymous
+- profile names, email addresses, IP addresses, and free-form notes are outside
+  the package contract
+- `trainingProgressionFieldPolicies` documents the retention and sensitivity
+  expectation for every exported progression field
+- `defaultTrainingScaleAssumptions` publishes the validated large-cohort
+  operating envelope used by the package docs and tests
 
 ## Governance
 
