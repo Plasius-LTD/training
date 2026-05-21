@@ -25,6 +25,8 @@ npm install @plasius/training
 - schools, barracks, academies, and apprenticeships
 - institutional trust and eligibility state
 - internalized, externalized, and hybrid specialization state
+- training mutation reliability and bounded-error expectations
+- observable training-state transition records for regression detection
 
 ## Demo
 
@@ -36,7 +38,11 @@ node demo/example.mjs
 ## Usage
 
 ```ts
-import { createTrainingInstitution } from "@plasius/training";
+import {
+  createTrainingInstitution,
+  createTrainingMutationReliabilityPolicy,
+  createTrainingStateTransitionEvent,
+} from "@plasius/training";
 
 const academy = createTrainingInstitution({
   institutionId: "academy-1",
@@ -46,6 +52,26 @@ const academy = createTrainingInstitution({
 });
 
 console.log(academy.track);
+
+const policy = createTrainingMutationReliabilityPolicy({
+  timeoutMs: 1500,
+  cancellationWindowMs: 250,
+  maxRetryAttempts: 2,
+  recoverableFailureCodes: ["TRAINING_TIMEOUT"],
+  terminalFailureCodes: ["TRACK_MISMATCH"],
+});
+
+const transition = createTrainingStateTransitionEvent({
+  transitionId: "transition-1",
+  institutionId: academy.institutionId,
+  transitionType: "track-changed",
+  outcome: "committed",
+  fromTrack: "internalized",
+  toTrack: academy.track,
+  observedAt: new Date().toISOString(),
+});
+
+console.log(policy.maxRetryAttempts, transition.transitionType);
 ```
 
 ## Governance
