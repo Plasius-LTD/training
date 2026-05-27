@@ -8,6 +8,8 @@ Provide a package-standard bootstrap for institutional training authority.
 
 - package descriptor and feature-flag metadata
 - institution and specialization contracts
+- mutation reliability-policy contracts
+- transition observability-event contracts
 - training institution helper
 - demo and test scaffolding
 
