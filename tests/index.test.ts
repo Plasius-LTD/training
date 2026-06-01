@@ -114,6 +114,32 @@ describe("@plasius/training", () => {
     expect(record.trustLevel).toBe("trusted");
   });
 
+  it("rejects incomplete progression identity fields", () => {
+    expect(() =>
+      createTrainingProgressionRecord({
+        playerSubjectId: "",
+        institutionId: "academy-1",
+        track: "hybrid",
+        trustLevel: "trusted",
+        eligible: true,
+        updatedAtIso: "2026-05-20T00:00:00.000Z",
+      })
+    ).toThrow("playerSubjectId must be a non-empty string");
+  });
+
+  it("rejects unsupported progression tracks", () => {
+    expect(() =>
+      createTrainingProgressionRecord({
+        playerSubjectId: "player-sub-1",
+        institutionId: "academy-1",
+        track: "unsupported" as never,
+        trustLevel: "trusted",
+        eligible: true,
+        updatedAtIso: "2026-05-20T00:00:00.000Z",
+      })
+    ).toThrow("track must be a supported MCC expression track");
+  });
+
   it("rejects unsupported trust levels", () => {
     expect(isTrainingTrustLevel("trusted")).toBe(true);
     expect(isTrainingTrustLevel("unknown")).toBe(false);
