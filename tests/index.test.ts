@@ -2,8 +2,10 @@ import {
   TRAINING_FEATURE_FLAG_ID,
   TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID,
   createTrainingInstitution,
+  createTrainingMutationReliabilityPolicy,
   createTrainingProgressionRecord,
   createTrainingScaleAssumptions,
+  createTrainingStateTransitionEvent,
   defaultTrainingScaleAssumptions,
   isTrainingTrustLevel,
   isMccExpressionTrack,
@@ -32,6 +34,36 @@ describe("@plasius/training", () => {
   it("guards valid specialization tracks", () => {
     expect(isMccExpressionTrack("hybrid")).toBe(true);
     expect(isMccExpressionTrack("invalid")).toBe(false);
+  });
+
+  it("creates immutable reliability policy metadata", () => {
+    const policy = createTrainingMutationReliabilityPolicy({
+      timeoutMs: 1500,
+      cancellationWindowMs: 250,
+      maxRetryAttempts: 2,
+      recoverableFailureCodes: ["TRAINING_TIMEOUT"],
+      terminalFailureCodes: ["TRACK_MISMATCH"],
+    });
+
+    expect(policy.maxRetryAttempts).toBe(2);
+    expect(() => {
+      (policy.recoverableFailureCodes as string[]).push("NOPE");
+    }).toThrow();
+  });
+
+  it("creates transition observability events", () => {
+    const event = createTrainingStateTransitionEvent({
+      transitionId: "transition-1",
+      institutionId: "academy-1",
+      transitionType: "track-changed",
+      outcome: "committed",
+      fromTrack: "internalized",
+      toTrack: "hybrid",
+      observedAt: "2026-05-21T00:00:00.000Z",
+    });
+
+    expect(event.transitionType).toBe("track-changed");
+    expect(event.toTrack).toBe("hybrid");
   });
 
   it("exports the privacy and scale rollout metadata", () => {

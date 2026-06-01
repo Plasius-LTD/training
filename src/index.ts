@@ -23,6 +23,17 @@ export type TrainingTrustLevel = "provisional" | "trusted" | "restricted";
 export type TrainingFieldSensitivity = "pseudonymous" | "internal";
 export type TrainingFieldRetention = "authoritative-progression" | "short-lived";
 
+export type TrainingMutationOutcome =
+  | "committed"
+  | "deferred"
+  | "timed-out"
+  | "cancelled";
+
+export type TrainingTransitionType =
+  | "eligibility-changed"
+  | "track-changed"
+  | "institution-transferred";
+
 export interface TrainingInstitution {
   readonly institutionId: string;
   readonly type: TrainingInstitutionType;
@@ -52,6 +63,24 @@ export interface TrainingScaleAssumptions {
   readonly maxProgressionEventsPerMinute: number;
 }
 
+export interface TrainingMutationReliabilityPolicy {
+  readonly timeoutMs: number;
+  readonly cancellationWindowMs: number;
+  readonly maxRetryAttempts: number;
+  readonly recoverableFailureCodes: readonly string[];
+  readonly terminalFailureCodes: readonly string[];
+}
+
+export interface TrainingStateTransitionEvent {
+  readonly transitionId: string;
+  readonly institutionId: string;
+  readonly transitionType: TrainingTransitionType;
+  readonly outcome: TrainingMutationOutcome;
+  readonly fromTrack: MccExpressionTrack;
+  readonly toTrack: MccExpressionTrack;
+  readonly observedAt: string;
+}
+
 export const TRAINING_PACKAGE = "@plasius/training";
 export const TRAINING_ENV_PREFIX = "TRAINING";
 export const TRAINING_FEATURE_FLAG_ID = "isekai.training.institutions.enabled";
@@ -67,6 +96,10 @@ export const packageDescriptor: PackageDescriptor = Object.freeze({
   summary:
     "Institutional training, trust, and specialization contracts for Plasius game progression.",
 });
+
+function freezeReadonlyArray<T>(items: readonly T[]): readonly T[] {
+  return Object.freeze([...items]);
+}
 
 export const trainingPrivacyScaleRollout: RolloutDescriptor = Object.freeze({
   featureFlagId: TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID,
@@ -142,6 +175,22 @@ export function isTrainingTrustLevel(value: string): value is TrainingTrustLevel
 export function createTrainingInstitution(
   input: TrainingInstitution
 ): TrainingInstitution {
+  return Object.freeze({ ...input });
+}
+
+export function createTrainingMutationReliabilityPolicy(
+  input: TrainingMutationReliabilityPolicy
+): TrainingMutationReliabilityPolicy {
+  return Object.freeze({
+    ...input,
+    recoverableFailureCodes: freezeReadonlyArray(input.recoverableFailureCodes),
+    terminalFailureCodes: freezeReadonlyArray(input.terminalFailureCodes),
+  });
+}
+
+export function createTrainingStateTransitionEvent(
+  input: TrainingStateTransitionEvent
+): TrainingStateTransitionEvent {
   return Object.freeze({ ...input });
 }
 

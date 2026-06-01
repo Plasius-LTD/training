@@ -26,6 +26,8 @@ npm install @plasius/training
 - institutional trust and eligibility state
 - internalized, externalized, and hybrid specialization state
 - privacy-safe progression payloads and large-cohort scale assumptions for institutional training flows
+- training mutation reliability and bounded-error expectations
+- observable training-state transition records for regression detection
 
 ## Demo
 
@@ -39,7 +41,9 @@ node demo/example.mjs
 ```ts
 import {
   createTrainingInstitution,
+  createTrainingMutationReliabilityPolicy,
   createTrainingProgressionRecord,
+  createTrainingStateTransitionEvent,
   defaultTrainingScaleAssumptions,
   trainingPrivacyScaleRollout,
 } from "@plasius/training";
@@ -60,9 +64,27 @@ const progression = createTrainingProgressionRecord({
   updatedAtIso: new Date().toISOString(),
 });
 
+const policy = createTrainingMutationReliabilityPolicy({
+  timeoutMs: 1500,
+  cancellationWindowMs: 250,
+  maxRetryAttempts: 2,
+  recoverableFailureCodes: ["TRAINING_TIMEOUT"],
+  terminalFailureCodes: ["TRACK_MISMATCH"],
+});
+
+const transition = createTrainingStateTransitionEvent({
+  transitionId: "transition-1",
+  institutionId: academy.institutionId,
+  transitionType: "track-changed",
+  outcome: "committed",
+  fromTrack: "internalized",
+  toTrack: academy.track,
+  observedAt: new Date().toISOString(),
+});
+
 console.log(trainingPrivacyScaleRollout.featureFlagId);
 console.log(defaultTrainingScaleAssumptions.maxLearnersPerInstitution);
-console.log(progression.playerSubjectId);
+console.log(progression.playerSubjectId, policy.maxRetryAttempts, transition.transitionType);
 ```
 
 ## Privacy And Scale Baseline
