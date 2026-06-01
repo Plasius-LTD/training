@@ -158,10 +158,35 @@ function assertPositiveSafeInteger(value: number, label: string): void {
 }
 
 const iso8601DateRegex =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
 
 function assertValidUpdatedAtIso(value: string): void {
-  if (!iso8601DateRegex.test(value) || Number.isNaN(Date.parse(value))) {
+  const match = iso8601DateRegex.exec(value);
+  if (!match || Number.isNaN(Date.parse(value))) {
+    throw new Error("updatedAtIso must be an ISO-8601 timestamp");
+  }
+
+  const [, yearRaw, monthRaw, dayRaw, hourRaw, minuteRaw, secondRaw] = match;
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  const second = Number(secondRaw);
+
+  if (
+    month < 1
+    || month > 12
+    || day < 1
+    || day > getDaysInMonth(year, month)
+    || hour > 23
+    || minute > 59
+    || second > 59
+  ) {
     throw new Error("updatedAtIso must be an ISO-8601 timestamp");
   }
 }

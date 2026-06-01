@@ -97,6 +97,30 @@ describe("@plasius/training", () => {
     ).toThrow("trustLevel must be a supported training trust level");
   });
 
+  it("rejects invalid progression timestamps", () => {
+    expect(() =>
+      createTrainingProgressionRecord({
+        playerSubjectId: "player-sub-1",
+        institutionId: "academy-1",
+        track: "hybrid",
+        trustLevel: "trusted",
+        eligible: true,
+        updatedAtIso: "2026-02-31T00:00:00.000Z",
+      })
+    ).toThrow("updatedAtIso must be an ISO-8601 timestamp");
+
+    expect(() =>
+      createTrainingProgressionRecord({
+        playerSubjectId: "player-sub-1",
+        institutionId: "academy-1",
+        track: "hybrid",
+        trustLevel: "trusted",
+        eligible: true,
+        updatedAtIso: "not-a-date",
+      })
+    ).toThrow("updatedAtIso must be an ISO-8601 timestamp");
+  });
+
   it("validates positive scale assumptions", () => {
     expect(defaultTrainingScaleAssumptions.maxLearnersPerInstitution).toBe(5_000);
 
