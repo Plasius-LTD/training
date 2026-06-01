@@ -24,7 +24,6 @@ permissions:
   id-token: write # for npm provenance (requires Node 18+ and npm >=9)
   attestations: write
 
-
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -108,11 +107,11 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         files: ./coverage/lcov.info
-         flags: unittests
-         fail_ci_if_error: true
-         slug: ${{ github.repository }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: true
+          slug: ${{ github.repository }}
 
       - name: Build
         run: npm run build --if-present
@@ -237,9 +236,17 @@ jobs:
             fi
           else
             if [ -f sbom.cdx.json ]; then
-              gh release create "$TAG" sbom.cdx.json                 --title "Release $TAG"                 --generate-notes                 --verify-tag                 --draft
+              gh release create "$TAG" sbom.cdx.json \
+                --title "Release $TAG" \
+                --generate-notes \
+                --verify-tag \
+                --draft
             else
-              gh release create "$TAG"                 --title "Release $TAG"                 --generate-notes                 --verify-tag                 --draft
+              gh release create "$TAG" \
+                --title "Release $TAG" \
+                --generate-notes \
+                --verify-tag \
+                --draft
             fi
           fi
 
