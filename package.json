@@ -1,6 +1,6 @@
 {
   "name": "@plasius/training",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Institutional training, trust, and specialization contracts for Plasius game progression",
   "type": "module",
   "sideEffects": false,
