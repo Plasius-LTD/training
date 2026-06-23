@@ -25,6 +25,7 @@ npm install @plasius/training
 - schools, barracks, academies, and apprenticeships
 - institutional trust and eligibility state
 - internalized, externalized, and hybrid specialization state
+- authoritative barracks drills, mission-earned martial unlocks, and bounded anti-spell fieldcraft doctrine
 - privacy-safe progression payloads and large-cohort scale assumptions for institutional training flows
 - training mutation reliability and bounded-error expectations
 - observable training-state transition records for regression detection
@@ -40,7 +41,11 @@ node demo/example.mjs
 
 ```ts
 import {
+  createTrainingAntiSpellFieldcraftDiscipline,
+  createTrainingBarracksDrill,
   createTrainingInstitution,
+  createTrainingMartialTechnique,
+  createTrainingMissionTechniqueUnlock,
   createTrainingMutationReliabilityPolicy,
   createTrainingProgressionRecord,
   createTrainingStateTransitionEvent,
@@ -82,9 +87,60 @@ const transition = createTrainingStateTransitionEvent({
   observedAt: new Date().toISOString(),
 });
 
+const drill = createTrainingBarracksDrill({
+  drillId: "drill-1",
+  institutionId: "barracks-1",
+  title: "Shield-line breach drill",
+  track: "internalized",
+  techniqueFamily: "shield-reinforcement",
+  deliveryMode: "drill",
+  missionPrerequisiteCodes: ["frontier-patrol-cleared"],
+  antiSpellFamilies: ["projectile-deflection", "grounding"],
+});
+
+const unlock = createTrainingMissionTechniqueUnlock({
+  unlockId: "unlock-1",
+  missionId: "mission-1",
+  techniqueId: "technique-1",
+  institutionId: "barracks-1",
+  track: "hybrid",
+  techniqueFamily: "mobility-strike",
+  unlockedAtIso: new Date().toISOString(),
+  reasonCodes: ["mission-earned"],
+});
+
+const technique = createTrainingMartialTechnique({
+  techniqueId: "technique-1",
+  institutionId: "barracks-1",
+  title: "Ward-breaking lunge",
+  track: "hybrid",
+  family: "ward-breaking-attack",
+  antiSpellFamily: "ward-stress",
+  expressionNote:
+    "Routes a committed MCC pattern from stance through weapon into a bounded ward-breaking strike.",
+});
+
+const fieldcraft = createTrainingAntiSpellFieldcraftDiscipline({
+  disciplineId: "discipline-1",
+  institutionId: "barracks-1",
+  title: "Anchor-cut grounding",
+  track: "internalized",
+  family: "grounding",
+  boundedCounterWindows: ["delivery", "stability"],
+  prohibitedCapabilityCodes: ["generic-magic-cancellation"],
+});
+
 console.log(trainingPrivacyScaleRollout.featureFlagId);
 console.log(defaultTrainingScaleAssumptions.maxLearnersPerInstitution);
-console.log(progression.playerSubjectId, policy.maxRetryAttempts, transition.transitionType);
+console.log(
+  progression.playerSubjectId,
+  policy.maxRetryAttempts,
+  transition.transitionType,
+  drill.deliveryMode,
+  unlock.techniqueFamily,
+  technique.family,
+  fieldcraft.family
+);
 ```
 
 ## Privacy And Scale Baseline
@@ -103,6 +159,21 @@ When that rollout is enabled, package consumers should prefer the minimal
   expectation for every exported progression field
 - `defaultTrainingScaleAssumptions` publishes the validated large-cohort
   operating envelope used by the package docs and tests
+
+## Martial Doctrine Surface
+
+The package also exports the canonical authority-side martial training vocabulary
+for feature flag `isekai.training.martial.enabled`.
+
+- `createTrainingBarracksDrill` models barracks instruction through drills,
+  sparring, service obligations, supervised missions, and rank-gated lessons.
+- `createTrainingMissionTechniqueUnlock` records mission-earned unlocks without
+  inventing a second power system.
+- `createTrainingMartialTechnique` keeps martial technique definitions inside the
+  MCC `internalized` and `hybrid` tracks.
+- `createTrainingAntiSpellFieldcraftDiscipline` bounds anti-spell instruction to
+  interruption, concentration breaking, projectile deflection, ward stress, and
+  grounding instead of generic magic cancellation.
 
 ## Governance
 
