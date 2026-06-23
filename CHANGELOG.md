@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - **Added**
-  - (placeholder)
+  - Added authoritative barracks-drill, mission-earned martial unlock, MCC martial-technique, and bounded anti-spell fieldcraft contracts for `isekai.training.martial.enabled`.
+  - Added validation helpers for internalized or hybrid martial tracks, barracks delivery modes, martial technique families, bounded anti-spell families, and their counter windows.
 
 - **Changed**
   - (placeholder)

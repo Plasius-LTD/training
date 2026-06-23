@@ -22,6 +22,34 @@ export type MccExpressionTrack = "internalized" | "externalized" | "hybrid";
 export type TrainingTrustLevel = "provisional" | "trusted" | "restricted";
 export type TrainingFieldSensitivity = "pseudonymous" | "internal";
 export type TrainingFieldRetention = "authoritative-progression" | "short-lived";
+export type TrainingMartialTechniqueTrack = "internalized" | "hybrid";
+export type TrainingBarracksDrillDeliveryMode =
+  | "drill"
+  | "sparring"
+  | "service-obligation"
+  | "supervised-mission"
+  | "rank-authorization";
+export type TrainingMartialTechniqueFamily =
+  | "body-reinforcement"
+  | "weapon-reinforcement"
+  | "shield-reinforcement"
+  | "stance"
+  | "timing"
+  | "aura-maintenance"
+  | "close-pressure"
+  | "mobility-strike"
+  | "ward-breaking-attack"
+  | "anti-spell-parry";
+export type TrainingAntiSpellFieldcraftFamily =
+  | "interruption"
+  | "concentration-breaking"
+  | "projectile-deflection"
+  | "ward-stress"
+  | "grounding";
+export type TrainingAntiSpellCounterWindow =
+  | "timing"
+  | "delivery"
+  | "stability";
 
 export type TrainingMutationOutcome =
   | "committed"
@@ -81,13 +109,91 @@ export interface TrainingStateTransitionEvent {
   readonly observedAt: string;
 }
 
+export interface TrainingBarracksDrill {
+  readonly drillId: string;
+  readonly institutionId: string;
+  readonly title: string;
+  readonly track: TrainingMartialTechniqueTrack;
+  readonly techniqueFamily: TrainingMartialTechniqueFamily;
+  readonly deliveryMode: TrainingBarracksDrillDeliveryMode;
+  readonly missionPrerequisiteCodes: readonly string[];
+  readonly antiSpellFamilies: readonly TrainingAntiSpellFieldcraftFamily[];
+}
+
+export interface TrainingMissionTechniqueUnlock {
+  readonly unlockId: string;
+  readonly missionId: string;
+  readonly techniqueId: string;
+  readonly institutionId: string;
+  readonly track: TrainingMartialTechniqueTrack;
+  readonly techniqueFamily: TrainingMartialTechniqueFamily;
+  readonly unlockedAtIso: string;
+  readonly reasonCodes: readonly string[];
+}
+
+export interface TrainingMartialTechnique {
+  readonly techniqueId: string;
+  readonly institutionId: string;
+  readonly title: string;
+  readonly track: TrainingMartialTechniqueTrack;
+  readonly family: TrainingMartialTechniqueFamily;
+  readonly antiSpellFamily?: TrainingAntiSpellFieldcraftFamily;
+  readonly expressionNote: string;
+}
+
+export interface TrainingAntiSpellFieldcraftDiscipline {
+  readonly disciplineId: string;
+  readonly institutionId: string;
+  readonly title: string;
+  readonly track: TrainingMartialTechniqueTrack;
+  readonly family: TrainingAntiSpellFieldcraftFamily;
+  readonly boundedCounterWindows: readonly TrainingAntiSpellCounterWindow[];
+  readonly prohibitedCapabilityCodes: readonly string[];
+}
+
 export const TRAINING_PACKAGE = "@plasius/training";
 export const TRAINING_ENV_PREFIX = "TRAINING";
 export const TRAINING_FEATURE_FLAG_ID = "isekai.training.institutions.enabled";
+export const TRAINING_MARTIAL_FEATURE_FLAG_ID = "isekai.training.martial.enabled";
 export const TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID =
   "isekai.training-progression.privacy-scale.enabled";
 export const TRAINING_PRIVACY_SCALE_ENV_OVERRIDE =
   "TRAINING_PRIVACY_SCALE_ENABLED";
+export const TRAINING_MARTIAL_TECHNIQUE_TRACKS = [
+  "internalized",
+  "hybrid",
+] as const;
+export const TRAINING_BARRACKS_DRILL_DELIVERY_MODES = [
+  "drill",
+  "sparring",
+  "service-obligation",
+  "supervised-mission",
+  "rank-authorization",
+] as const;
+export const TRAINING_MARTIAL_TECHNIQUE_FAMILIES = [
+  "body-reinforcement",
+  "weapon-reinforcement",
+  "shield-reinforcement",
+  "stance",
+  "timing",
+  "aura-maintenance",
+  "close-pressure",
+  "mobility-strike",
+  "ward-breaking-attack",
+  "anti-spell-parry",
+] as const;
+export const TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES = [
+  "interruption",
+  "concentration-breaking",
+  "projectile-deflection",
+  "ward-stress",
+  "grounding",
+] as const;
+export const TRAINING_ANTI_SPELL_COUNTER_WINDOWS = [
+  "timing",
+  "delivery",
+  "stability",
+] as const;
 
 export const packageDescriptor: PackageDescriptor = Object.freeze({
   packageName: TRAINING_PACKAGE,
@@ -168,14 +274,58 @@ export function isMccExpressionTrack(value: string): value is MccExpressionTrack
   return value === "internalized" || value === "externalized" || value === "hybrid";
 }
 
+export function isTrainingMartialTechniqueTrack(
+  value: string,
+): value is TrainingMartialTechniqueTrack {
+  return (TRAINING_MARTIAL_TECHNIQUE_TRACKS as readonly string[]).includes(value);
+}
+
 export function isTrainingTrustLevel(value: string): value is TrainingTrustLevel {
   return value === "provisional" || value === "trusted" || value === "restricted";
+}
+
+export function isTrainingBarracksDrillDeliveryMode(
+  value: string,
+): value is TrainingBarracksDrillDeliveryMode {
+  return (TRAINING_BARRACKS_DRILL_DELIVERY_MODES as readonly string[]).includes(value);
+}
+
+export function isTrainingMartialTechniqueFamily(
+  value: string,
+): value is TrainingMartialTechniqueFamily {
+  return (TRAINING_MARTIAL_TECHNIQUE_FAMILIES as readonly string[]).includes(value);
+}
+
+export function isTrainingAntiSpellFieldcraftFamily(
+  value: string,
+): value is TrainingAntiSpellFieldcraftFamily {
+  return (TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES as readonly string[]).includes(value);
+}
+
+export function isTrainingAntiSpellCounterWindow(
+  value: string,
+): value is TrainingAntiSpellCounterWindow {
+  return (TRAINING_ANTI_SPELL_COUNTER_WINDOWS as readonly string[]).includes(value);
 }
 
 export function createTrainingInstitution(
   input: TrainingInstitution
 ): TrainingInstitution {
   return Object.freeze({ ...input });
+}
+
+function freezeValidatedReadonlyArray<T>(
+  items: readonly T[],
+  validator: (value: T) => boolean,
+  label: string,
+): readonly T[] {
+  for (const item of items) {
+    if (!validator(item)) {
+      throw new Error(`${label} contains an unsupported value`);
+    }
+  }
+
+  return freezeReadonlyArray(items);
 }
 
 export function createTrainingMutationReliabilityPolicy(
@@ -257,6 +407,112 @@ export function createTrainingProgressionRecord(
   }
 
   return Object.freeze({ ...input });
+}
+
+export function createTrainingBarracksDrill(
+  input: TrainingBarracksDrill,
+): TrainingBarracksDrill {
+  assertNonEmptyString(input.drillId, "drillId");
+  assertNonEmptyString(input.institutionId, "institutionId");
+  assertNonEmptyString(input.title, "title");
+
+  if (!isTrainingMartialTechniqueTrack(input.track)) {
+    throw new Error("track must be an internalized or hybrid martial technique track");
+  }
+
+  if (!isTrainingMartialTechniqueFamily(input.techniqueFamily)) {
+    throw new Error("techniqueFamily must be a supported martial technique family");
+  }
+
+  if (!isTrainingBarracksDrillDeliveryMode(input.deliveryMode)) {
+    throw new Error("deliveryMode must be a supported barracks drill delivery mode");
+  }
+
+  return Object.freeze({
+    ...input,
+    missionPrerequisiteCodes: freezeReadonlyArray(input.missionPrerequisiteCodes),
+    antiSpellFamilies: freezeValidatedReadonlyArray(
+      input.antiSpellFamilies,
+      isTrainingAntiSpellFieldcraftFamily,
+      "antiSpellFamilies",
+    ),
+  });
+}
+
+export function createTrainingMissionTechniqueUnlock(
+  input: TrainingMissionTechniqueUnlock,
+): TrainingMissionTechniqueUnlock {
+  assertNonEmptyString(input.unlockId, "unlockId");
+  assertNonEmptyString(input.missionId, "missionId");
+  assertNonEmptyString(input.techniqueId, "techniqueId");
+  assertNonEmptyString(input.institutionId, "institutionId");
+  assertNonEmptyString(input.unlockedAtIso, "unlockedAtIso");
+  assertValidUpdatedAtIso(input.unlockedAtIso);
+
+  if (!isTrainingMartialTechniqueTrack(input.track)) {
+    throw new Error("track must be an internalized or hybrid martial technique track");
+  }
+
+  if (!isTrainingMartialTechniqueFamily(input.techniqueFamily)) {
+    throw new Error("techniqueFamily must be a supported martial technique family");
+  }
+
+  return Object.freeze({
+    ...input,
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
+}
+
+export function createTrainingMartialTechnique(
+  input: TrainingMartialTechnique,
+): TrainingMartialTechnique {
+  assertNonEmptyString(input.techniqueId, "techniqueId");
+  assertNonEmptyString(input.institutionId, "institutionId");
+  assertNonEmptyString(input.title, "title");
+  assertNonEmptyString(input.expressionNote, "expressionNote");
+
+  if (!isTrainingMartialTechniqueTrack(input.track)) {
+    throw new Error("track must be an internalized or hybrid martial technique track");
+  }
+
+  if (!isTrainingMartialTechniqueFamily(input.family)) {
+    throw new Error("family must be a supported martial technique family");
+  }
+
+  if (
+    input.antiSpellFamily !== undefined
+    && !isTrainingAntiSpellFieldcraftFamily(input.antiSpellFamily)
+  ) {
+    throw new Error("antiSpellFamily must be a supported bounded anti-spell family");
+  }
+
+  return Object.freeze({ ...input });
+}
+
+export function createTrainingAntiSpellFieldcraftDiscipline(
+  input: TrainingAntiSpellFieldcraftDiscipline,
+): TrainingAntiSpellFieldcraftDiscipline {
+  assertNonEmptyString(input.disciplineId, "disciplineId");
+  assertNonEmptyString(input.institutionId, "institutionId");
+  assertNonEmptyString(input.title, "title");
+
+  if (!isTrainingMartialTechniqueTrack(input.track)) {
+    throw new Error("track must be an internalized or hybrid martial technique track");
+  }
+
+  if (!isTrainingAntiSpellFieldcraftFamily(input.family)) {
+    throw new Error("family must be a supported bounded anti-spell family");
+  }
+
+  return Object.freeze({
+    ...input,
+    boundedCounterWindows: freezeValidatedReadonlyArray(
+      input.boundedCounterWindows,
+      isTrainingAntiSpellCounterWindow,
+      "boundedCounterWindows",
+    ),
+    prohibitedCapabilityCodes: freezeReadonlyArray(input.prohibitedCapabilityCodes),
+  });
 }
 
 export function createTrainingScaleAssumptions(
