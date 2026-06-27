@@ -96,6 +96,47 @@ describe("@plasius/training", () => {
         eligible: true,
       })
     ).toThrow("type must be a supported training institution type");
+
+    expect(() =>
+      createTrainingInstitution({
+        institutionId: "academy-1",
+        type: "academy",
+        track: "unsupported" as never,
+        eligible: true,
+      })
+    ).toThrow("track must be a supported MCC expression track");
+  });
+
+  it("supports each institutional and transition variant used by the contracts", () => {
+    expect(
+      createTrainingInstitution({
+        institutionId: "school-1",
+        type: "school",
+        track: "externalized",
+        eligible: false,
+      }).type
+    ).toBe("school");
+    expect(
+      createTrainingInstitution({
+        institutionId: "apprenticeship-1",
+        type: "apprenticeship",
+        track: "hybrid",
+        eligible: true,
+      }).type
+    ).toBe("apprenticeship");
+
+    const event = createTrainingStateTransitionEvent({
+      transitionId: "transition-variant-1",
+      institutionId: "school-1",
+      transitionType: "institution-transferred",
+      outcome: "cancelled",
+      fromTrack: "externalized",
+      toTrack: "internalized",
+      observedAt: "2026-05-22T00:00:00.000Z",
+    });
+
+    expect(event.transitionType).toBe("institution-transferred");
+    expect(event.outcome).toBe("cancelled");
   });
 
   it("guards valid specialization tracks", () => {
@@ -351,6 +392,30 @@ describe("@plasius/training", () => {
         observedAt: "2026-02-31T00:00:00.000Z",
       })
     ).toThrow("observedAt must be an ISO-8601 timestamp");
+
+    expect(() =>
+      createTrainingStateTransitionEvent({
+        transitionId: "transition-1",
+        institutionId: "academy-1",
+        transitionType: "track-changed",
+        outcome: "unknown" as never,
+        fromTrack: "internalized",
+        toTrack: "hybrid",
+        observedAt: "2026-05-21T00:00:00.000Z",
+      })
+    ).toThrow("outcome must be a supported training mutation outcome");
+
+    expect(() =>
+      createTrainingStateTransitionEvent({
+        transitionId: "transition-1",
+        institutionId: "academy-1",
+        transitionType: "track-changed",
+        outcome: "committed",
+        fromTrack: "unsupported" as never,
+        toTrack: "hybrid",
+        observedAt: "2026-05-21T00:00:00.000Z",
+      })
+    ).toThrow("fromTrack must be a supported MCC expression track");
   });
 
   it("exports the privacy and scale rollout metadata", () => {
@@ -816,6 +881,58 @@ describe("@plasius/training", () => {
     ).toThrow("track must be an internalized or hybrid martial technique track");
 
     expect(() =>
+      createTrainingBarracksDrill({
+        drillId: "drill-1",
+        institutionId: "barracks-1",
+        title: "Invalid technique family",
+        track: "hybrid",
+        techniqueFamily: "invalid-family" as never,
+        deliveryMode: "drill",
+        missionPrerequisiteCodes: [],
+        antiSpellFamilies: [],
+      })
+    ).toThrow("techniqueFamily must be a supported martial technique family");
+
+    expect(() =>
+      createTrainingBarracksDrill({
+        drillId: "drill-1",
+        institutionId: "barracks-1",
+        title: "Invalid delivery mode",
+        track: "hybrid",
+        techniqueFamily: "stance",
+        deliveryMode: "lecture" as never,
+        missionPrerequisiteCodes: [],
+        antiSpellFamilies: [],
+      })
+    ).toThrow("deliveryMode must be a supported barracks drill delivery mode");
+
+    expect(() =>
+      createTrainingMissionTechniqueUnlock({
+        unlockId: "unlock-1",
+        missionId: "mission-1",
+        techniqueId: "technique-1",
+        institutionId: "barracks-1",
+        track: "hybrid",
+        techniqueFamily: "invalid-family" as never,
+        unlockedAtIso: "2026-06-23T06:30:00.000Z",
+        reasonCodes: [],
+      })
+    ).toThrow("techniqueFamily must be a supported martial technique family");
+
+    expect(() =>
+      createTrainingMissionTechniqueUnlock({
+        unlockId: "unlock-1",
+        missionId: "mission-1",
+        techniqueId: "technique-1",
+        institutionId: "barracks-1",
+        track: "externalized" as never,
+        techniqueFamily: "mobility-strike",
+        unlockedAtIso: "2026-06-23T06:30:00.000Z",
+        reasonCodes: [],
+      })
+    ).toThrow("track must be an internalized or hybrid martial technique track");
+
+    expect(() =>
       createTrainingMissionTechniqueUnlock({
         unlockId: "unlock-1",
         missionId: "mission-1",
@@ -867,6 +984,28 @@ describe("@plasius/training", () => {
       createTrainingMartialTechnique({
         techniqueId: "technique-1",
         institutionId: "barracks-1",
+        title: "Externalized technique",
+        track: "externalized" as never,
+        family: "anti-spell-parry",
+        expressionNote: "invalid",
+      })
+    ).toThrow("track must be an internalized or hybrid martial technique track");
+
+    expect(() =>
+      createTrainingMartialTechnique({
+        techniqueId: "technique-1",
+        institutionId: "barracks-1",
+        title: "Unsupported family",
+        track: "hybrid",
+        family: "invalid-family" as never,
+        expressionNote: "invalid",
+      })
+    ).toThrow("family must be a supported martial technique family");
+
+    expect(() =>
+      createTrainingMartialTechnique({
+        techniqueId: "technique-1",
+        institutionId: "barracks-1",
         title: "Unbounded anti-spell",
         track: "hybrid",
         family: "anti-spell-parry",
@@ -874,6 +1013,30 @@ describe("@plasius/training", () => {
         expressionNote: "invalid",
       })
     ).toThrow("antiSpellFamily must be a supported bounded anti-spell family");
+
+    expect(() =>
+      createTrainingAntiSpellFieldcraftDiscipline({
+        disciplineId: "discipline-1",
+        institutionId: "barracks-1",
+        title: "Invalid externalized fieldcraft",
+        track: "externalized" as never,
+        family: "grounding",
+        boundedCounterWindows: ["delivery"],
+        prohibitedCapabilityCodes: [],
+      })
+    ).toThrow("track must be an internalized or hybrid martial technique track");
+
+    expect(() =>
+      createTrainingAntiSpellFieldcraftDiscipline({
+        disciplineId: "discipline-1",
+        institutionId: "barracks-1",
+        title: "Invalid bounded family",
+        track: "internalized",
+        family: "invalid-family" as never,
+        boundedCounterWindows: ["delivery"],
+        prohibitedCapabilityCodes: [],
+      })
+    ).toThrow("family must be a supported bounded anti-spell family");
 
     expect(() =>
       createTrainingAntiSpellFieldcraftDiscipline({
