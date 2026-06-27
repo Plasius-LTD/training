@@ -476,6 +476,38 @@ export function isMccExpressionTrack(value: string): value is MccExpressionTrack
   return value === "internalized" || value === "externalized" || value === "hybrid";
 }
 
+function isTrainingInstitutionType(
+  value: string,
+): value is TrainingInstitutionType {
+  return (
+    value === "school"
+    || value === "barracks"
+    || value === "academy"
+    || value === "apprenticeship"
+  );
+}
+
+function isTrainingMutationOutcome(
+  value: string,
+): value is TrainingMutationOutcome {
+  return (
+    value === "committed"
+    || value === "deferred"
+    || value === "timed-out"
+    || value === "cancelled"
+  );
+}
+
+function isTrainingTransitionType(
+  value: string,
+): value is TrainingTransitionType {
+  return (
+    value === "eligibility-changed"
+    || value === "track-changed"
+    || value === "institution-transferred"
+  );
+}
+
 export function isTrainingMartialTechniqueTrack(
   value: string,
 ): value is TrainingMartialTechniqueTrack {
@@ -573,6 +605,16 @@ export function isTrainingAntiSpellCounterWindow(
 export function createTrainingInstitution(
   input: TrainingInstitution
 ): TrainingInstitution {
+  assertNonEmptyString(input.institutionId, "institutionId");
+
+  if (!isTrainingInstitutionType(input.type)) {
+    throw new Error("type must be a supported training institution type");
+  }
+
+  if (!isMccExpressionTrack(input.track)) {
+    throw new Error("track must be a supported MCC expression track");
+  }
+
   return Object.freeze({ ...input });
 }
 
@@ -593,16 +635,50 @@ function freezeValidatedReadonlyArray<T>(
 export function createTrainingMutationReliabilityPolicy(
   input: TrainingMutationReliabilityPolicy
 ): TrainingMutationReliabilityPolicy {
+  assertPositiveSafeInteger(input.timeoutMs, "timeoutMs");
+  assertNonNegativeSafeInteger(
+    input.cancellationWindowMs,
+    "cancellationWindowMs",
+  );
+  assertNonNegativeSafeInteger(input.maxRetryAttempts, "maxRetryAttempts");
+
   return Object.freeze({
     ...input,
-    recoverableFailureCodes: freezeReadonlyArray(input.recoverableFailureCodes),
-    terminalFailureCodes: freezeReadonlyArray(input.terminalFailureCodes),
+    recoverableFailureCodes: assertNonEmptyStringArray(
+      input.recoverableFailureCodes,
+      "recoverableFailureCodes",
+    ),
+    terminalFailureCodes: assertNonEmptyStringArray(
+      input.terminalFailureCodes,
+      "terminalFailureCodes",
+    ),
   });
 }
 
 export function createTrainingStateTransitionEvent(
   input: TrainingStateTransitionEvent
 ): TrainingStateTransitionEvent {
+  assertNonEmptyString(input.transitionId, "transitionId");
+  assertNonEmptyString(input.institutionId, "institutionId");
+  assertNonEmptyString(input.observedAt, "observedAt");
+  assertValidIsoTimestamp(input.observedAt, "observedAt");
+
+  if (!isTrainingTransitionType(input.transitionType)) {
+    throw new Error("transitionType must be a supported training transition type");
+  }
+
+  if (!isTrainingMutationOutcome(input.outcome)) {
+    throw new Error("outcome must be a supported training mutation outcome");
+  }
+
+  if (!isMccExpressionTrack(input.fromTrack)) {
+    throw new Error("fromTrack must be a supported MCC expression track");
+  }
+
+  if (!isMccExpressionTrack(input.toTrack)) {
+    throw new Error("toTrack must be a supported MCC expression track");
+  }
+
   return Object.freeze({ ...input });
 }
 
@@ -615,6 +691,12 @@ function assertNonEmptyString(value: string, label: string): void {
 function assertPositiveSafeInteger(value: number, label: string): void {
   if (!Number.isSafeInteger(value) || value <= 0) {
     throw new Error(`${label} must be a positive safe integer`);
+  }
+}
+
+function assertNonNegativeSafeInteger(value: number, label: string): void {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`${label} must be a non-negative safe integer`);
   }
 }
 
@@ -656,13 +738,32 @@ function assertValidUpdatedAtIso(value: string): void {
   assertIso8601Timestamp(value, "updatedAtIso");
 }
 
+function assertValidIsoTimestamp(value: string, label: string): void {
+  assertIso8601Timestamp(value, label);
+}
+
+function assertNonEmptyStringArray(
+  values: readonly string[],
+  label: string,
+): readonly string[] {
+  if (!Array.isArray(values)) {
+    throw new Error(`${label} must be an array of non-empty strings`);
+  }
+
+  for (const value of values) {
+    assertNonEmptyString(value, `${label} entry`);
+  }
+
+  return freezeReadonlyArray(values);
+}
+
 export function createTrainingProgressionRecord(
   input: TrainingProgressionRecord
 ): TrainingProgressionRecord {
   assertNonEmptyString(input.playerSubjectId, "playerSubjectId");
   assertNonEmptyString(input.institutionId, "institutionId");
   assertNonEmptyString(input.updatedAtIso, "updatedAtIso");
-  assertValidUpdatedAtIso(input.updatedAtIso);
+  assertValidIsoTimestamp(input.updatedAtIso, "updatedAtIso");
 
   if (!isMccExpressionTrack(input.track)) {
     throw new Error("track must be a supported MCC expression track");
@@ -980,7 +1081,7 @@ export function createTrainingMissionTechniqueUnlock(
   assertNonEmptyString(input.techniqueId, "techniqueId");
   assertNonEmptyString(input.institutionId, "institutionId");
   assertNonEmptyString(input.unlockedAtIso, "unlockedAtIso");
-  assertValidUpdatedAtIso(input.unlockedAtIso);
+  assertValidIsoTimestamp(input.unlockedAtIso, "unlockedAtIso");
 
   if (!isTrainingMartialTechniqueTrack(input.track)) {
     throw new Error("track must be an internalized or hybrid martial technique track");
