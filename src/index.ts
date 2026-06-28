@@ -20,8 +20,34 @@ export type TrainingInstitutionType =
 
 export type MccExpressionTrack = "internalized" | "externalized" | "hybrid";
 export type TrainingTrustLevel = "provisional" | "trusted" | "restricted";
+export type TrainingTrustMarkerSource =
+  | "system"
+  | "mission"
+  | "institution"
+  | "sponsor";
 export type TrainingFieldSensitivity = "pseudonymous" | "internal";
 export type TrainingFieldRetention = "authoritative-progression" | "short-lived";
+export type TrainingAcademicProgressStage =
+  | "school-foundation"
+  | "school-advanced"
+  | "academy-candidate"
+  | "academy-admitted"
+  | "track-specialized";
+export type TrainingAcademyAdmissionDecision =
+  | "candidate"
+  | "admitted"
+  | "waitlisted"
+  | "deferred";
+export type TrainingInstructionAccessLevel =
+  | "not-authorized"
+  | "school-foundation"
+  | "academy-provisional"
+  | "academy-specialization";
+export type TrainingTechniqueMasteryState =
+  | "not-started"
+  | "guided"
+  | "field-tested"
+  | "validated";
 export type TrainingMartialTechniqueTrack = "internalized" | "hybrid";
 export type TrainingBarracksDrillDeliveryMode =
   | "drill"
@@ -76,6 +102,59 @@ export interface TrainingProgressionRecord {
   readonly trustLevel: TrainingTrustLevel;
   readonly eligible: boolean;
   readonly updatedAtIso: string;
+}
+
+export interface TrainingAcademicMissionPrerequisite {
+  readonly prerequisiteId: string;
+  readonly institutionId: string;
+  readonly missionId: string;
+  readonly missionCode: string;
+  readonly minimumProgressStage: TrainingAcademicProgressStage;
+  readonly minimumTrustLevel: TrainingTrustLevel;
+  readonly satisfied: boolean;
+  readonly reasonCodes: readonly string[];
+}
+
+export interface TrainingTrustMarker {
+  readonly markerId: string;
+  readonly institutionId: string;
+  readonly trustLevel: TrainingTrustLevel;
+  readonly source: TrainingTrustMarkerSource;
+  readonly awardedAtIso: string;
+  readonly reasonCodes: readonly string[];
+}
+
+export interface TrainingSchoolProgression {
+  readonly progressionId: string;
+  readonly schoolInstitutionId: string;
+  readonly stage: TrainingAcademicProgressStage;
+  readonly leaning: MccExpressionTrack;
+  readonly missionPrerequisites: readonly TrainingAcademicMissionPrerequisite[];
+  readonly trustMarkers: readonly TrainingTrustMarker[];
+  readonly updatedAtIso: string;
+}
+
+export interface TrainingAcademyAdmission {
+  readonly admissionId: string;
+  readonly schoolInstitutionId: string;
+  readonly academyInstitutionId: string;
+  readonly desiredTrack: MccExpressionTrack;
+  readonly decision: TrainingAcademyAdmissionDecision;
+  readonly missionPrerequisites: readonly TrainingAcademicMissionPrerequisite[];
+  readonly supportingTrustMarkerIds: readonly string[];
+  readonly evaluatedAtIso: string;
+  readonly reasonCodes: readonly string[];
+}
+
+export interface TrainingTrackSelection {
+  readonly selectionId: string;
+  readonly institutionId: string;
+  readonly leaning: MccExpressionTrack;
+  readonly selectedTrack: MccExpressionTrack;
+  readonly instructionAccess: TrainingInstructionAccessLevel;
+  readonly techniqueMastery: TrainingTechniqueMasteryState;
+  readonly updatedAtIso: string;
+  readonly reasonCodes: readonly string[];
 }
 
 export interface TrainingProgressionFieldPolicy {
@@ -154,11 +233,44 @@ export interface TrainingAntiSpellFieldcraftDiscipline {
 export const TRAINING_PACKAGE = "@plasius/training";
 export const TRAINING_ENV_PREFIX = "TRAINING";
 export const TRAINING_FEATURE_FLAG_ID = "isekai.training.institutions.enabled";
+export const TRAINING_ACADEMIES_FEATURE_FLAG_ID =
+  "isekai.training.academies.enabled";
 export const TRAINING_MARTIAL_FEATURE_FLAG_ID = "isekai.training.martial.enabled";
 export const TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID =
   "isekai.training-progression.privacy-scale.enabled";
 export const TRAINING_PRIVACY_SCALE_ENV_OVERRIDE =
   "TRAINING_PRIVACY_SCALE_ENABLED";
+export const TRAINING_TRUST_MARKER_SOURCES = [
+  "system",
+  "mission",
+  "institution",
+  "sponsor",
+] as const;
+export const TRAINING_ACADEMIC_PROGRESS_STAGES = [
+  "school-foundation",
+  "school-advanced",
+  "academy-candidate",
+  "academy-admitted",
+  "track-specialized",
+] as const;
+export const TRAINING_ACADEMY_ADMISSION_DECISIONS = [
+  "candidate",
+  "admitted",
+  "waitlisted",
+  "deferred",
+] as const;
+export const TRAINING_INSTRUCTION_ACCESS_LEVELS = [
+  "not-authorized",
+  "school-foundation",
+  "academy-provisional",
+  "academy-specialization",
+] as const;
+export const TRAINING_TECHNIQUE_MASTERY_STATES = [
+  "not-started",
+  "guided",
+  "field-tested",
+  "validated",
+] as const;
 export const TRAINING_MARTIAL_TECHNIQUE_TRACKS = [
   "internalized",
   "hybrid",
@@ -284,6 +396,36 @@ export function isTrainingTrustLevel(value: string): value is TrainingTrustLevel
   return value === "provisional" || value === "trusted" || value === "restricted";
 }
 
+export function isTrainingTrustMarkerSource(
+  value: string,
+): value is TrainingTrustMarkerSource {
+  return (TRAINING_TRUST_MARKER_SOURCES as readonly string[]).includes(value);
+}
+
+export function isTrainingAcademicProgressStage(
+  value: string,
+): value is TrainingAcademicProgressStage {
+  return (TRAINING_ACADEMIC_PROGRESS_STAGES as readonly string[]).includes(value);
+}
+
+export function isTrainingAcademyAdmissionDecision(
+  value: string,
+): value is TrainingAcademyAdmissionDecision {
+  return (TRAINING_ACADEMY_ADMISSION_DECISIONS as readonly string[]).includes(value);
+}
+
+export function isTrainingInstructionAccessLevel(
+  value: string,
+): value is TrainingInstructionAccessLevel {
+  return (TRAINING_INSTRUCTION_ACCESS_LEVELS as readonly string[]).includes(value);
+}
+
+export function isTrainingTechniqueMasteryState(
+  value: string,
+): value is TrainingTechniqueMasteryState {
+  return (TRAINING_TECHNIQUE_MASTERY_STATES as readonly string[]).includes(value);
+}
+
 export function isTrainingBarracksDrillDeliveryMode(
   value: string,
 ): value is TrainingBarracksDrillDeliveryMode {
@@ -363,10 +505,10 @@ function getDaysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-function assertValidUpdatedAtIso(value: string): void {
+function assertIso8601Timestamp(value: string, label: string): void {
   const match = iso8601DateRegex.exec(value);
   if (!match || Number.isNaN(Date.parse(value))) {
-    throw new Error("updatedAtIso must be an ISO-8601 timestamp");
+    throw new Error(`${label} must be an ISO-8601 timestamp`);
   }
 
   const [, yearRaw, monthRaw, dayRaw, hourRaw, minuteRaw, secondRaw] = match;
@@ -386,8 +528,12 @@ function assertValidUpdatedAtIso(value: string): void {
     || minute > 59
     || second > 59
   ) {
-    throw new Error("updatedAtIso must be an ISO-8601 timestamp");
+    throw new Error(`${label} must be an ISO-8601 timestamp`);
   }
+}
+
+function assertValidUpdatedAtIso(value: string): void {
+  assertIso8601Timestamp(value, "updatedAtIso");
 }
 
 export function createTrainingProgressionRecord(
@@ -407,6 +553,134 @@ export function createTrainingProgressionRecord(
   }
 
   return Object.freeze({ ...input });
+}
+
+export function createTrainingAcademicMissionPrerequisite(
+  input: TrainingAcademicMissionPrerequisite,
+): TrainingAcademicMissionPrerequisite {
+  assertNonEmptyString(input.prerequisiteId, "prerequisiteId");
+  assertNonEmptyString(input.institutionId, "institutionId");
+  assertNonEmptyString(input.missionId, "missionId");
+  assertNonEmptyString(input.missionCode, "missionCode");
+
+  if (!isTrainingAcademicProgressStage(input.minimumProgressStage)) {
+    throw new Error("minimumProgressStage must be a supported academic progress stage");
+  }
+
+  if (!isTrainingTrustLevel(input.minimumTrustLevel)) {
+    throw new Error("minimumTrustLevel must be a supported training trust level");
+  }
+
+  return Object.freeze({
+    ...input,
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
+}
+
+export function createTrainingTrustMarker(
+  input: TrainingTrustMarker,
+): TrainingTrustMarker {
+  assertNonEmptyString(input.markerId, "markerId");
+  assertNonEmptyString(input.institutionId, "institutionId");
+  assertNonEmptyString(input.awardedAtIso, "awardedAtIso");
+  assertIso8601Timestamp(input.awardedAtIso, "awardedAtIso");
+
+  if (!isTrainingTrustLevel(input.trustLevel)) {
+    throw new Error("trustLevel must be a supported training trust level");
+  }
+
+  if (!isTrainingTrustMarkerSource(input.source)) {
+    throw new Error("source must be a supported training trust marker source");
+  }
+
+  return Object.freeze({
+    ...input,
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
+}
+
+export function createTrainingSchoolProgression(
+  input: TrainingSchoolProgression,
+): TrainingSchoolProgression {
+  assertNonEmptyString(input.progressionId, "progressionId");
+  assertNonEmptyString(input.schoolInstitutionId, "schoolInstitutionId");
+  assertNonEmptyString(input.updatedAtIso, "updatedAtIso");
+  assertValidUpdatedAtIso(input.updatedAtIso);
+
+  if (!isTrainingAcademicProgressStage(input.stage)) {
+    throw new Error("stage must be a supported academic progress stage");
+  }
+
+  if (!isMccExpressionTrack(input.leaning)) {
+    throw new Error("leaning must be a supported MCC expression track");
+  }
+
+  return Object.freeze({
+    ...input,
+    missionPrerequisites: freezeReadonlyArray(
+      input.missionPrerequisites.map(createTrainingAcademicMissionPrerequisite),
+    ),
+    trustMarkers: freezeReadonlyArray(
+      input.trustMarkers.map(createTrainingTrustMarker),
+    ),
+  });
+}
+
+export function createTrainingAcademyAdmission(
+  input: TrainingAcademyAdmission,
+): TrainingAcademyAdmission {
+  assertNonEmptyString(input.admissionId, "admissionId");
+  assertNonEmptyString(input.schoolInstitutionId, "schoolInstitutionId");
+  assertNonEmptyString(input.academyInstitutionId, "academyInstitutionId");
+  assertNonEmptyString(input.evaluatedAtIso, "evaluatedAtIso");
+  assertIso8601Timestamp(input.evaluatedAtIso, "evaluatedAtIso");
+
+  if (!isMccExpressionTrack(input.desiredTrack)) {
+    throw new Error("desiredTrack must be a supported MCC expression track");
+  }
+
+  if (!isTrainingAcademyAdmissionDecision(input.decision)) {
+    throw new Error("decision must be a supported academy admission decision");
+  }
+
+  return Object.freeze({
+    ...input,
+    missionPrerequisites: freezeReadonlyArray(
+      input.missionPrerequisites.map(createTrainingAcademicMissionPrerequisite),
+    ),
+    supportingTrustMarkerIds: freezeReadonlyArray(input.supportingTrustMarkerIds),
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
+}
+
+export function createTrainingTrackSelection(
+  input: TrainingTrackSelection,
+): TrainingTrackSelection {
+  assertNonEmptyString(input.selectionId, "selectionId");
+  assertNonEmptyString(input.institutionId, "institutionId");
+  assertNonEmptyString(input.updatedAtIso, "updatedAtIso");
+  assertValidUpdatedAtIso(input.updatedAtIso);
+
+  if (!isMccExpressionTrack(input.leaning)) {
+    throw new Error("leaning must be a supported MCC expression track");
+  }
+
+  if (!isMccExpressionTrack(input.selectedTrack)) {
+    throw new Error("selectedTrack must be a supported MCC expression track");
+  }
+
+  if (!isTrainingInstructionAccessLevel(input.instructionAccess)) {
+    throw new Error("instructionAccess must be a supported instruction access level");
+  }
+
+  if (!isTrainingTechniqueMasteryState(input.techniqueMastery)) {
+    throw new Error("techniqueMastery must be a supported technique mastery state");
+  }
+
+  return Object.freeze({
+    ...input,
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
 }
 
 export function createTrainingBarracksDrill(

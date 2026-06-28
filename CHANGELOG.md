@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - **Added**
-  - (placeholder)
+  - Added `isekai.training.academies.enabled` authority contracts for school progression, academy admission, academic mission prerequisites, trust markers, and track selection state.
+  - Added validation helpers for academic progress stages, trust-marker sources, academy admission decisions, instruction-access levels, and technique-mastery states.
 
 - **Changed**
   - (placeholder)
