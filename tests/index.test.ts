@@ -1,4 +1,10 @@
 import {
+  TRAINING_ACADEMIES_FEATURE_FLAG_ID,
+  TRAINING_TRUST_MARKER_SOURCES,
+  TRAINING_ACADEMIC_PROGRESS_STAGES,
+  TRAINING_ACADEMY_ADMISSION_DECISIONS,
+  TRAINING_INSTRUCTION_ACCESS_LEVELS,
+  TRAINING_TECHNIQUE_MASTERY_STATES,
   TRAINING_FEATURE_FLAG_ID,
   TRAINING_MARTIAL_FEATURE_FLAG_ID,
   TRAINING_MARTIAL_TECHNIQUE_TRACKS,
@@ -7,6 +13,8 @@ import {
   TRAINING_ANTI_SPELL_FIELDCRAFT_FAMILIES,
   TRAINING_ANTI_SPELL_COUNTER_WINDOWS,
   TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID,
+  createTrainingAcademicMissionPrerequisite,
+  createTrainingAcademyAdmission,
   createTrainingAntiSpellFieldcraftDiscipline,
   createTrainingBarracksDrill,
   createTrainingInstitution,
@@ -15,13 +23,21 @@ import {
   createTrainingMutationReliabilityPolicy,
   createTrainingProgressionRecord,
   createTrainingScaleAssumptions,
+  createTrainingSchoolProgression,
   createTrainingStateTransitionEvent,
+  createTrainingTrackSelection,
+  createTrainingTrustMarker,
   defaultTrainingScaleAssumptions,
+  isTrainingAcademicProgressStage,
+  isTrainingAcademyAdmissionDecision,
   isTrainingAntiSpellCounterWindow,
   isTrainingAntiSpellFieldcraftFamily,
   isTrainingBarracksDrillDeliveryMode,
+  isTrainingInstructionAccessLevel,
   isTrainingMartialTechniqueFamily,
   isTrainingMartialTechniqueTrack,
+  isTrainingTechniqueMasteryState,
+  isTrainingTrustMarkerSource,
   isTrainingTrustLevel,
   isMccExpressionTrack,
   packageDescriptor,
@@ -49,6 +65,43 @@ describe("@plasius/training", () => {
   it("guards valid specialization tracks", () => {
     expect(isMccExpressionTrack("hybrid")).toBe(true);
     expect(isMccExpressionTrack("invalid")).toBe(false);
+  });
+
+  it("exports the academies feature flag and academic progression vocabularies", () => {
+    expect(TRAINING_ACADEMIES_FEATURE_FLAG_ID).toBe(
+      "isekai.training.academies.enabled"
+    );
+    expect(TRAINING_TRUST_MARKER_SOURCES).toEqual([
+      "system",
+      "mission",
+      "institution",
+      "sponsor",
+    ]);
+    expect(TRAINING_ACADEMIC_PROGRESS_STAGES).toEqual([
+      "school-foundation",
+      "school-advanced",
+      "academy-candidate",
+      "academy-admitted",
+      "track-specialized",
+    ]);
+    expect(TRAINING_ACADEMY_ADMISSION_DECISIONS).toEqual([
+      "candidate",
+      "admitted",
+      "waitlisted",
+      "deferred",
+    ]);
+    expect(TRAINING_INSTRUCTION_ACCESS_LEVELS).toEqual([
+      "not-authorized",
+      "school-foundation",
+      "academy-provisional",
+      "academy-specialization",
+    ]);
+    expect(TRAINING_TECHNIQUE_MASTERY_STATES).toEqual([
+      "not-started",
+      "guided",
+      "field-tested",
+      "validated",
+    ]);
   });
 
   it("exports the martial feature flag and bounded doctrine lists", () => {
@@ -84,6 +137,18 @@ describe("@plasius/training", () => {
   });
 
   it("guards valid martial doctrine vocabularies", () => {
+    expect(isTrainingTrustMarkerSource("mission")).toBe(true);
+    expect(isTrainingTrustMarkerSource("unknown")).toBe(false);
+    expect(isTrainingAcademicProgressStage("academy-admitted")).toBe(true);
+    expect(isTrainingAcademicProgressStage("academy-graduate")).toBe(false);
+    expect(isTrainingAcademyAdmissionDecision("waitlisted")).toBe(true);
+    expect(isTrainingAcademyAdmissionDecision("approved")).toBe(false);
+    expect(isTrainingInstructionAccessLevel("academy-specialization")).toBe(
+      true
+    );
+    expect(isTrainingInstructionAccessLevel("lesson-plan")).toBe(false);
+    expect(isTrainingTechniqueMasteryState("field-tested")).toBe(true);
+    expect(isTrainingTechniqueMasteryState("mastered")).toBe(false);
     expect(isTrainingMartialTechniqueTrack("internalized")).toBe(true);
     expect(isTrainingMartialTechniqueTrack("externalized")).toBe(false);
     expect(isTrainingBarracksDrillDeliveryMode("sparring")).toBe(true);
@@ -174,6 +239,68 @@ describe("@plasius/training", () => {
 
     expect(record.playerSubjectId).toBe("player-sub-1");
     expect(record.trustLevel).toBe("trusted");
+  });
+
+  it("creates frozen academic mission, trust, admission, and track-selection models", () => {
+    const missionPrerequisite = createTrainingAcademicMissionPrerequisite({
+      prerequisiteId: "prereq-1",
+      institutionId: "school-1",
+      missionId: "mission-1",
+      missionCode: "academy-entrance",
+      minimumProgressStage: "academy-candidate",
+      minimumTrustLevel: "provisional",
+      satisfied: false,
+      reasonCodes: ["complete-entrance-exam"],
+    });
+    const trustMarker = createTrainingTrustMarker({
+      markerId: "marker-1",
+      institutionId: "school-1",
+      trustLevel: "trusted",
+      source: "mission",
+      awardedAtIso: "2026-06-28T08:00:00.000Z",
+      reasonCodes: ["mission-sponsorship"],
+    });
+    const schoolProgression = createTrainingSchoolProgression({
+      progressionId: "progression-1",
+      schoolInstitutionId: "school-1",
+      stage: "academy-candidate",
+      leaning: "hybrid",
+      missionPrerequisites: [missionPrerequisite],
+      trustMarkers: [trustMarker],
+      updatedAtIso: "2026-06-28T08:30:00.000Z",
+    });
+    const academyAdmission = createTrainingAcademyAdmission({
+      admissionId: "admission-1",
+      schoolInstitutionId: "school-1",
+      academyInstitutionId: "academy-1",
+      desiredTrack: "hybrid",
+      decision: "candidate",
+      missionPrerequisites: [missionPrerequisite],
+      supportingTrustMarkerIds: [trustMarker.markerId],
+      evaluatedAtIso: "2026-06-28T09:00:00.000Z",
+      reasonCodes: ["pending-academy-board"],
+    });
+    const trackSelection = createTrainingTrackSelection({
+      selectionId: "selection-1",
+      institutionId: "academy-1",
+      leaning: "hybrid",
+      selectedTrack: "externalized",
+      instructionAccess: "academy-provisional",
+      techniqueMastery: "guided",
+      updatedAtIso: "2026-06-28T09:30:00.000Z",
+      reasonCodes: ["theory-cleared"],
+    });
+
+    expect(missionPrerequisite.minimumProgressStage).toBe("academy-candidate");
+    expect(trustMarker.source).toBe("mission");
+    expect(schoolProgression.stage).toBe("academy-candidate");
+    expect(academyAdmission.decision).toBe("candidate");
+    expect(trackSelection.instructionAccess).toBe("academy-provisional");
+    expect(trackSelection.techniqueMastery).toBe("guided");
+    expect(Object.isFrozen(schoolProgression.missionPrerequisites)).toBe(true);
+    expect(Object.isFrozen(schoolProgression.trustMarkers)).toBe(true);
+    expect(Object.isFrozen(academyAdmission.reasonCodes)).toBe(true);
+    expect(Object.isFrozen(trackSelection.reasonCodes)).toBe(true);
   });
 
   it("creates frozen barracks drill and mission-earned unlock models", () => {
@@ -312,6 +439,61 @@ describe("@plasius/training", () => {
   });
 
   it("rejects invalid martial doctrine payloads", () => {
+    expect(() =>
+      createTrainingAcademicMissionPrerequisite({
+        prerequisiteId: "prereq-1",
+        institutionId: "school-1",
+        missionId: "mission-1",
+        missionCode: "academy-entrance",
+        minimumProgressStage: "academy-graduate" as never,
+        minimumTrustLevel: "trusted",
+        satisfied: true,
+        reasonCodes: [],
+      })
+    ).toThrow(
+      "minimumProgressStage must be a supported academic progress stage"
+    );
+
+    expect(() =>
+      createTrainingTrustMarker({
+        markerId: "marker-1",
+        institutionId: "school-1",
+        trustLevel: "trusted",
+        source: "guild" as never,
+        awardedAtIso: "2026-06-28T08:00:00.000Z",
+        reasonCodes: [],
+      })
+    ).toThrow("source must be a supported training trust marker source");
+
+    expect(() =>
+      createTrainingAcademyAdmission({
+        admissionId: "admission-1",
+        schoolInstitutionId: "school-1",
+        academyInstitutionId: "academy-1",
+        desiredTrack: "hybrid",
+        decision: "approved" as never,
+        missionPrerequisites: [],
+        supportingTrustMarkerIds: [],
+        evaluatedAtIso: "2026-06-28T09:00:00.000Z",
+        reasonCodes: [],
+      })
+    ).toThrow("decision must be a supported academy admission decision");
+
+    expect(() =>
+      createTrainingTrackSelection({
+        selectionId: "selection-1",
+        institutionId: "academy-1",
+        leaning: "hybrid",
+        selectedTrack: "externalized",
+        instructionAccess: "lesson-plan" as never,
+        techniqueMastery: "guided",
+        updatedAtIso: "2026-06-28T09:30:00.000Z",
+        reasonCodes: [],
+      })
+    ).toThrow(
+      "instructionAccess must be a supported instruction access level"
+    );
+
     expect(() =>
       createTrainingBarracksDrill({
         drillId: "drill-1",

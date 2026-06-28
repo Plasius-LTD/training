@@ -24,7 +24,9 @@ npm install @plasius/training
 
 - schools, barracks, academies, and apprenticeships
 - institutional trust and eligibility state
+- school progression, academy admission, academic mission prerequisites, and trust markers
 - internalized, externalized, and hybrid specialization state
+- track-selection state that distinguishes instruction access from technique mastery
 - authoritative barracks drills, mission-earned martial unlocks, and bounded anti-spell fieldcraft doctrine
 - privacy-safe progression payloads and large-cohort scale assumptions for institutional training flows
 - training mutation reliability and bounded-error expectations
@@ -41,6 +43,9 @@ node demo/example.mjs
 
 ```ts
 import {
+  TRAINING_ACADEMIES_FEATURE_FLAG_ID,
+  createTrainingAcademicMissionPrerequisite,
+  createTrainingAcademyAdmission,
   createTrainingAntiSpellFieldcraftDiscipline,
   createTrainingBarracksDrill,
   createTrainingInstitution,
@@ -48,7 +53,10 @@ import {
   createTrainingMissionTechniqueUnlock,
   createTrainingMutationReliabilityPolicy,
   createTrainingProgressionRecord,
+  createTrainingSchoolProgression,
   createTrainingStateTransitionEvent,
+  createTrainingTrackSelection,
+  createTrainingTrustMarker,
   defaultTrainingScaleAssumptions,
   trainingPrivacyScaleRollout,
 } from "@plasius/training";
@@ -85,6 +93,59 @@ const transition = createTrainingStateTransitionEvent({
   fromTrack: "internalized",
   toTrack: academy.track,
   observedAt: new Date().toISOString(),
+});
+
+const academyMission = createTrainingAcademicMissionPrerequisite({
+  prerequisiteId: "prereq-1",
+  institutionId: "school-1",
+  missionId: "mission-1",
+  missionCode: "academy-entrance",
+  minimumProgressStage: "academy-candidate",
+  minimumTrustLevel: "provisional",
+  satisfied: false,
+  reasonCodes: ["complete-entrance-exam"],
+});
+
+const trustMarker = createTrainingTrustMarker({
+  markerId: "marker-1",
+  institutionId: "school-1",
+  trustLevel: "trusted",
+  source: "mission",
+  awardedAtIso: new Date().toISOString(),
+  reasonCodes: ["mission-sponsorship"],
+});
+
+const schoolProgression = createTrainingSchoolProgression({
+  progressionId: "progression-1",
+  schoolInstitutionId: "school-1",
+  stage: "academy-candidate",
+  leaning: "hybrid",
+  missionPrerequisites: [academyMission],
+  trustMarkers: [trustMarker],
+  updatedAtIso: new Date().toISOString(),
+});
+
+const academyAdmission = createTrainingAcademyAdmission({
+  admissionId: "admission-1",
+  schoolInstitutionId: "school-1",
+  academyInstitutionId: academy.institutionId,
+  desiredTrack: academy.track,
+  decision: "candidate",
+  missionPrerequisites: [academyMission],
+  supportingTrustMarkerIds: [trustMarker.markerId],
+  evaluatedAtIso: new Date().toISOString(),
+  reasonCodes: ["pending-academy-board"],
+});
+
+const trackSelection = createTrainingTrackSelection({
+  selectionId: "selection-1",
+  institutionId: academy.institutionId,
+  leaning: "hybrid",
+  selectedTrack: "externalized",
+  instructionAccess: "academy-provisional",
+  techniqueMastery: "guided",
+  updatedAtIso: new Date().toISOString(),
+  reasonCodes: ["theory-cleared"],
 });
 
 const drill = createTrainingBarracksDrill({
@@ -133,7 +194,11 @@ const fieldcraft = createTrainingAntiSpellFieldcraftDiscipline({
 console.log(trainingPrivacyScaleRollout.featureFlagId);
 console.log(defaultTrainingScaleAssumptions.maxLearnersPerInstitution);
 console.log(
+  TRAINING_ACADEMIES_FEATURE_FLAG_ID,
   progression.playerSubjectId,
+  schoolProgression.stage,
+  academyAdmission.decision,
+  trackSelection.techniqueMastery,
   policy.maxRetryAttempts,
   transition.transitionType,
   drill.deliveryMode,
@@ -174,6 +239,23 @@ for feature flag `isekai.training.martial.enabled`.
 - `createTrainingAntiSpellFieldcraftDiscipline` bounds anti-spell instruction to
   interruption, concentration breaking, projectile deflection, ward stress, and
   grounding instead of generic magic cancellation.
+
+## Academic Progression Surface
+
+The package also exports the academy-track authority vocabulary for feature flag
+`isekai.training.academies.enabled`.
+
+- `createTrainingAcademicMissionPrerequisite` models academy-gating mission
+  requirements with explicit minimum stage and trust expectations.
+- `createTrainingTrustMarker` records institutional trust evidence without
+  carrying broader player profile state.
+- `createTrainingSchoolProgression` packages school-stage progress, outstanding
+  academy prerequisites, and trust evidence into a frozen authority record.
+- `createTrainingAcademyAdmission` keeps academy decisions, prerequisite state,
+  and supporting trust markers explicit.
+- `createTrainingTrackSelection` distinguishes instruction access from technique
+  mastery so consumers can reason about teaching availability separately from
+  demonstrated competence.
 
 ## Governance
 
