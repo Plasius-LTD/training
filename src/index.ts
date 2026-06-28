@@ -615,6 +615,10 @@ export function createTrainingInstitution(
     throw new Error("track must be a supported MCC expression track");
   }
 
+  if (typeof input.eligible !== "boolean") {
+    throw new Error("eligible must be a boolean");
+  }
+
   return Object.freeze({ ...input });
 }
 

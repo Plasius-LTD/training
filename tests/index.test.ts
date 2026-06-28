@@ -105,6 +105,15 @@ describe("@plasius/training", () => {
         eligible: true,
       })
     ).toThrow("track must be a supported MCC expression track");
+
+    expect(() =>
+      createTrainingInstitution({
+        institutionId: "academy-1",
+        type: "academy",
+        track: "hybrid",
+        eligible: "false" as never,
+      })
+    ).toThrow("eligible must be a boolean");
   });
 
   it("supports each institutional and transition variant used by the contracts", () => {
@@ -339,6 +348,16 @@ describe("@plasius/training", () => {
         terminalFailureCodes: ["TRACK_MISMATCH"],
       })
     ).toThrow("recoverableFailureCodes entry must be a non-empty string");
+
+    expect(() =>
+      createTrainingMutationReliabilityPolicy({
+        timeoutMs: 1500,
+        cancellationWindowMs: 250,
+        maxRetryAttempts: 2,
+        recoverableFailureCodes: "TRAINING_TIMEOUT" as never,
+        terminalFailureCodes: ["TRACK_MISMATCH"],
+      })
+    ).toThrow("recoverableFailureCodes must be an array of non-empty strings");
   });
 
   it("creates transition observability events", () => {
