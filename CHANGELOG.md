@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.6] - 2026-06-28
+
+- **Added**
   - Added `isekai.training.academies.enabled` authority contracts for school progression, academy admission, academic mission prerequisites, trust markers, and track selection state.
   - Added validation helpers for academic progress stages, trust-marker sources, academy admission decisions, instruction-access levels, and technique-mastery states.
 
@@ -55,3 +69,4 @@ All notable changes to this project will be documented in this file.
 [0.1.3]: https://github.com/Plasius-LTD/training/releases/tag/v0.1.3
 [0.1.4]: https://github.com/Plasius-LTD/training/releases/tag/v0.1.4
 [0.1.5]: https://github.com/Plasius-LTD/training/releases/tag/v0.1.5
+[0.1.6]: https://github.com/Plasius-LTD/training/releases/tag/v0.1.6
