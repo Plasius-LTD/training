@@ -25,8 +25,10 @@ npm install @plasius/training
 - schools, barracks, academies, and apprenticeships
 - institutional trust and eligibility state
 - school progression, academy admission, academic mission prerequisites, and trust markers
+- apprenticeship sponsorship, supervision, readiness, and authority-safe crafting handoff state
 - internalized, externalized, and hybrid specialization state
 - track-selection state that distinguishes instruction access from technique mastery
+- apprenticeship access state that stays distinct from mastered external crafting output
 - authoritative barracks drills, mission-earned martial unlocks, and bounded anti-spell fieldcraft doctrine
 - privacy-safe progression payloads and large-cohort scale assumptions for institutional training flows
 - training mutation reliability and bounded-error expectations
@@ -44,10 +46,15 @@ node demo/example.mjs
 ```ts
 import {
   TRAINING_ACADEMIES_FEATURE_FLAG_ID,
+  TRAINING_APPRENTICESHIP_FEATURE_FLAG_ID,
   createTrainingAcademicMissionPrerequisite,
   createTrainingAcademyAdmission,
   createTrainingAntiSpellFieldcraftDiscipline,
+  createTrainingApprenticeshipReadiness,
+  createTrainingApprenticeshipSupervision,
+  createTrainingApprenticeshipSponsorship,
   createTrainingBarracksDrill,
+  createTrainingCraftingAuthorityHandoff,
   createTrainingInstitution,
   createTrainingMartialTechnique,
   createTrainingMissionTechniqueUnlock,
@@ -148,6 +155,56 @@ const trackSelection = createTrainingTrackSelection({
   reasonCodes: ["theory-cleared"],
 });
 
+const sponsorship = createTrainingApprenticeshipSponsorship({
+  sponsorshipId: "sponsorship-1",
+  apprenticeshipInstitutionId: "apprenticeship-1",
+  sponsorId: "guild-smith-1",
+  professionId: "smithing",
+  sponsoredTrack: "hybrid",
+  trustLevel: "trusted",
+  grantedAtIso: new Date().toISOString(),
+  missionRequirementCodes: ["complete-forge-observation"],
+  reasonCodes: ["mission-earned-sponsorship"],
+});
+
+const supervision = createTrainingApprenticeshipSupervision({
+  supervisionId: "supervision-1",
+  apprenticeshipInstitutionId: "apprenticeship-1",
+  supervisorId: "master-smith-1",
+  professionId: "smithing",
+  supervisionMode: "assisted-practice",
+  focusTrack: "hybrid",
+  startedAtIso: new Date().toISOString(),
+  checkpointAtIso: new Date().toISOString(),
+  taskCodes: ["forge-setup", "tool-maintenance"],
+  reasonCodes: ["supervisor-cleared"],
+});
+
+const apprenticeshipReadiness = createTrainingApprenticeshipReadiness({
+  readinessId: "readiness-1",
+  apprenticeshipInstitutionId: "apprenticeship-1",
+  professionId: "smithing",
+  stage: "handoff-ready",
+  outputState: "practice-only",
+  sponsorshipId: sponsorship.sponsorshipId,
+  supervisionId: supervision.supervisionId,
+  supportedAuthorityIds: ["item-crafting", "spellcraft"],
+  readyForHandoff: true,
+  updatedAtIso: new Date().toISOString(),
+  reasonCodes: ["practice-threshold-cleared"],
+});
+
+const craftingHandoff = createTrainingCraftingAuthorityHandoff({
+  handoffId: "handoff-1",
+  readinessId: apprenticeshipReadiness.readinessId,
+  authorityId: "item-crafting",
+  professionId: "smithing",
+  apprenticeshipStage: apprenticeshipReadiness.stage,
+  outputState: apprenticeshipReadiness.outputState,
+  eligible: true,
+  reasonCodes: ["external-authority-preserved"],
+});
+
 const drill = createTrainingBarracksDrill({
   drillId: "drill-1",
   institutionId: "barracks-1",
@@ -195,10 +252,13 @@ console.log(trainingPrivacyScaleRollout.featureFlagId);
 console.log(defaultTrainingScaleAssumptions.maxLearnersPerInstitution);
 console.log(
   TRAINING_ACADEMIES_FEATURE_FLAG_ID,
+  TRAINING_APPRENTICESHIP_FEATURE_FLAG_ID,
   progression.playerSubjectId,
   schoolProgression.stage,
   academyAdmission.decision,
   trackSelection.techniqueMastery,
+  apprenticeshipReadiness.stage,
+  craftingHandoff.authorityId,
   policy.maxRetryAttempts,
   transition.transitionType,
   drill.deliveryMode,
@@ -256,6 +316,22 @@ The package also exports the academy-track authority vocabulary for feature flag
 - `createTrainingTrackSelection` distinguishes instruction access from technique
   mastery so consumers can reason about teaching availability separately from
   demonstrated competence.
+
+## Apprenticeship Handoff Surface
+
+The package also exports the apprenticeship-routing vocabulary for feature flag
+`isekai.training.apprenticeship.enabled`.
+
+- `createTrainingApprenticeshipSponsorship` records who sponsored the
+  apprenticeship entry and which profession track they unlocked.
+- `createTrainingApprenticeshipSupervision` keeps supervised practice explicit
+  instead of collapsing it into a generic unlock boolean.
+- `createTrainingApprenticeshipReadiness` separates apprenticeship access state
+  from mastered external crafting output while publishing which downstream
+  crafting authorities are currently valid handoff targets.
+- `createTrainingCraftingAuthorityHandoff` captures the authority-safe handoff
+  snapshot for item-crafting, spellcraft, and later dungeon-crafting systems
+  without moving execution truth into the Player System.
 
 ## Governance
 

@@ -48,6 +48,23 @@ export type TrainingTechniqueMasteryState =
   | "guided"
   | "field-tested"
   | "validated";
+export type TrainingApprenticeshipReadinessStage =
+  | "candidate"
+  | "sponsored"
+  | "supervised-practice"
+  | "handoff-ready";
+export type TrainingApprenticeshipSupervisionMode =
+  | "shadowing"
+  | "assisted-practice"
+  | "supervised-production";
+export type TrainingApprenticeshipOutputState =
+  | "practice-only"
+  | "supervised-output"
+  | "mastered-output";
+export type TrainingCraftingAuthorityId =
+  | "item-crafting"
+  | "spellcraft"
+  | "dungeon-crafting";
 export type TrainingMartialTechniqueTrack = "internalized" | "hybrid";
 export type TrainingBarracksDrillDeliveryMode =
   | "drill"
@@ -157,6 +174,56 @@ export interface TrainingTrackSelection {
   readonly reasonCodes: readonly string[];
 }
 
+export interface TrainingApprenticeshipSponsorship {
+  readonly sponsorshipId: string;
+  readonly apprenticeshipInstitutionId: string;
+  readonly sponsorId: string;
+  readonly professionId: string;
+  readonly sponsoredTrack: MccExpressionTrack;
+  readonly trustLevel: TrainingTrustLevel;
+  readonly grantedAtIso: string;
+  readonly missionRequirementCodes: readonly string[];
+  readonly reasonCodes: readonly string[];
+}
+
+export interface TrainingApprenticeshipSupervision {
+  readonly supervisionId: string;
+  readonly apprenticeshipInstitutionId: string;
+  readonly supervisorId: string;
+  readonly professionId: string;
+  readonly supervisionMode: TrainingApprenticeshipSupervisionMode;
+  readonly focusTrack: MccExpressionTrack;
+  readonly startedAtIso: string;
+  readonly checkpointAtIso: string;
+  readonly taskCodes: readonly string[];
+  readonly reasonCodes: readonly string[];
+}
+
+export interface TrainingApprenticeshipReadiness {
+  readonly readinessId: string;
+  readonly apprenticeshipInstitutionId: string;
+  readonly professionId: string;
+  readonly stage: TrainingApprenticeshipReadinessStage;
+  readonly outputState: TrainingApprenticeshipOutputState;
+  readonly sponsorshipId: string;
+  readonly supervisionId?: string;
+  readonly supportedAuthorityIds: readonly TrainingCraftingAuthorityId[];
+  readonly readyForHandoff: boolean;
+  readonly updatedAtIso: string;
+  readonly reasonCodes: readonly string[];
+}
+
+export interface TrainingCraftingAuthorityHandoff {
+  readonly handoffId: string;
+  readonly readinessId: string;
+  readonly authorityId: TrainingCraftingAuthorityId;
+  readonly professionId: string;
+  readonly apprenticeshipStage: TrainingApprenticeshipReadinessStage;
+  readonly outputState: TrainingApprenticeshipOutputState;
+  readonly eligible: boolean;
+  readonly reasonCodes: readonly string[];
+}
+
 export interface TrainingProgressionFieldPolicy {
   readonly field: keyof TrainingProgressionRecord;
   readonly sensitivity: TrainingFieldSensitivity;
@@ -235,6 +302,8 @@ export const TRAINING_ENV_PREFIX = "TRAINING";
 export const TRAINING_FEATURE_FLAG_ID = "isekai.training.institutions.enabled";
 export const TRAINING_ACADEMIES_FEATURE_FLAG_ID =
   "isekai.training.academies.enabled";
+export const TRAINING_APPRENTICESHIP_FEATURE_FLAG_ID =
+  "isekai.training.apprenticeship.enabled";
 export const TRAINING_MARTIAL_FEATURE_FLAG_ID = "isekai.training.martial.enabled";
 export const TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID =
   "isekai.training-progression.privacy-scale.enabled";
@@ -270,6 +339,27 @@ export const TRAINING_TECHNIQUE_MASTERY_STATES = [
   "guided",
   "field-tested",
   "validated",
+] as const;
+export const TRAINING_APPRENTICESHIP_READINESS_STAGES = [
+  "candidate",
+  "sponsored",
+  "supervised-practice",
+  "handoff-ready",
+] as const;
+export const TRAINING_APPRENTICESHIP_SUPERVISION_MODES = [
+  "shadowing",
+  "assisted-practice",
+  "supervised-production",
+] as const;
+export const TRAINING_APPRENTICESHIP_OUTPUT_STATES = [
+  "practice-only",
+  "supervised-output",
+  "mastered-output",
+] as const;
+export const TRAINING_CRAFTING_AUTHORITY_IDS = [
+  "item-crafting",
+  "spellcraft",
+  "dungeon-crafting",
 ] as const;
 export const TRAINING_MARTIAL_TECHNIQUE_TRACKS = [
   "internalized",
@@ -424,6 +514,36 @@ export function isTrainingTechniqueMasteryState(
   value: string,
 ): value is TrainingTechniqueMasteryState {
   return (TRAINING_TECHNIQUE_MASTERY_STATES as readonly string[]).includes(value);
+}
+
+export function isTrainingApprenticeshipReadinessStage(
+  value: string,
+): value is TrainingApprenticeshipReadinessStage {
+  return (TRAINING_APPRENTICESHIP_READINESS_STAGES as readonly string[]).includes(
+    value,
+  );
+}
+
+export function isTrainingApprenticeshipSupervisionMode(
+  value: string,
+): value is TrainingApprenticeshipSupervisionMode {
+  return (TRAINING_APPRENTICESHIP_SUPERVISION_MODES as readonly string[]).includes(
+    value,
+  );
+}
+
+export function isTrainingApprenticeshipOutputState(
+  value: string,
+): value is TrainingApprenticeshipOutputState {
+  return (TRAINING_APPRENTICESHIP_OUTPUT_STATES as readonly string[]).includes(
+    value,
+  );
+}
+
+export function isTrainingCraftingAuthorityId(
+  value: string,
+): value is TrainingCraftingAuthorityId {
+  return (TRAINING_CRAFTING_AUTHORITY_IDS as readonly string[]).includes(value);
 }
 
 export function isTrainingBarracksDrillDeliveryMode(
@@ -675,6 +795,145 @@ export function createTrainingTrackSelection(
 
   if (!isTrainingTechniqueMasteryState(input.techniqueMastery)) {
     throw new Error("techniqueMastery must be a supported technique mastery state");
+  }
+
+  return Object.freeze({
+    ...input,
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
+}
+
+export function createTrainingApprenticeshipSponsorship(
+  input: TrainingApprenticeshipSponsorship,
+): TrainingApprenticeshipSponsorship {
+  assertNonEmptyString(input.sponsorshipId, "sponsorshipId");
+  assertNonEmptyString(
+    input.apprenticeshipInstitutionId,
+    "apprenticeshipInstitutionId",
+  );
+  assertNonEmptyString(input.sponsorId, "sponsorId");
+  assertNonEmptyString(input.professionId, "professionId");
+  assertNonEmptyString(input.grantedAtIso, "grantedAtIso");
+  assertIso8601Timestamp(input.grantedAtIso, "grantedAtIso");
+
+  if (!isMccExpressionTrack(input.sponsoredTrack)) {
+    throw new Error("sponsoredTrack must be a supported MCC expression track");
+  }
+
+  if (!isTrainingTrustLevel(input.trustLevel)) {
+    throw new Error("trustLevel must be a supported training trust level");
+  }
+
+  return Object.freeze({
+    ...input,
+    missionRequirementCodes: freezeReadonlyArray(input.missionRequirementCodes),
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
+}
+
+export function createTrainingApprenticeshipSupervision(
+  input: TrainingApprenticeshipSupervision,
+): TrainingApprenticeshipSupervision {
+  assertNonEmptyString(input.supervisionId, "supervisionId");
+  assertNonEmptyString(
+    input.apprenticeshipInstitutionId,
+    "apprenticeshipInstitutionId",
+  );
+  assertNonEmptyString(input.supervisorId, "supervisorId");
+  assertNonEmptyString(input.professionId, "professionId");
+  assertNonEmptyString(input.startedAtIso, "startedAtIso");
+  assertNonEmptyString(input.checkpointAtIso, "checkpointAtIso");
+  assertIso8601Timestamp(input.startedAtIso, "startedAtIso");
+  assertIso8601Timestamp(input.checkpointAtIso, "checkpointAtIso");
+
+  if (!isTrainingApprenticeshipSupervisionMode(input.supervisionMode)) {
+    throw new Error(
+      "supervisionMode must be a supported apprenticeship supervision mode",
+    );
+  }
+
+  if (!isMccExpressionTrack(input.focusTrack)) {
+    throw new Error("focusTrack must be a supported MCC expression track");
+  }
+
+  return Object.freeze({
+    ...input,
+    taskCodes: freezeReadonlyArray(input.taskCodes),
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
+}
+
+export function createTrainingApprenticeshipReadiness(
+  input: TrainingApprenticeshipReadiness,
+): TrainingApprenticeshipReadiness {
+  assertNonEmptyString(input.readinessId, "readinessId");
+  assertNonEmptyString(
+    input.apprenticeshipInstitutionId,
+    "apprenticeshipInstitutionId",
+  );
+  assertNonEmptyString(input.professionId, "professionId");
+  assertNonEmptyString(input.sponsorshipId, "sponsorshipId");
+  assertNonEmptyString(input.updatedAtIso, "updatedAtIso");
+  assertValidUpdatedAtIso(input.updatedAtIso);
+
+  if (!isTrainingApprenticeshipReadinessStage(input.stage)) {
+    throw new Error("stage must be a supported apprenticeship readiness stage");
+  }
+
+  if (!isTrainingApprenticeshipOutputState(input.outputState)) {
+    throw new Error("outputState must be a supported apprenticeship output state");
+  }
+
+  if (input.readyForHandoff && input.stage !== "handoff-ready") {
+    throw new Error("readyForHandoff requires the handoff-ready apprenticeship stage");
+  }
+
+  if (input.stage === "handoff-ready" && !input.readyForHandoff) {
+    throw new Error("handoff-ready apprenticeship stage must set readyForHandoff");
+  }
+
+  const supportedAuthorityIds = freezeValidatedReadonlyArray(
+    input.supportedAuthorityIds,
+    isTrainingCraftingAuthorityId,
+    "supportedAuthorityIds",
+  );
+
+  if (input.readyForHandoff && supportedAuthorityIds.length === 0) {
+    throw new Error(
+      "supportedAuthorityIds must contain at least one supported crafting authority when readyForHandoff is true",
+    );
+  }
+
+  return Object.freeze({
+    ...input,
+    supportedAuthorityIds,
+    reasonCodes: freezeReadonlyArray(input.reasonCodes),
+  });
+}
+
+export function createTrainingCraftingAuthorityHandoff(
+  input: TrainingCraftingAuthorityHandoff,
+): TrainingCraftingAuthorityHandoff {
+  assertNonEmptyString(input.handoffId, "handoffId");
+  assertNonEmptyString(input.readinessId, "readinessId");
+  assertNonEmptyString(input.professionId, "professionId");
+
+  if (!isTrainingCraftingAuthorityId(input.authorityId)) {
+    throw new Error("authorityId must be a supported crafting authority id");
+  }
+
+  if (!isTrainingApprenticeshipReadinessStage(input.apprenticeshipStage)) {
+    throw new Error(
+      "apprenticeshipStage must be a supported apprenticeship readiness stage",
+    );
+  }
+
+  if (!isTrainingApprenticeshipOutputState(input.outputState)) {
+    throw new Error("outputState must be a supported apprenticeship output state");
+  }
+
+  if (input.eligible && input.apprenticeshipStage !== "handoff-ready") {
+    throw new Error("eligible handoffs require the handoff-ready apprenticeship stage");
   }
 
   return Object.freeze({
