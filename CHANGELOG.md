@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - **Added**
-  - (placeholder)
+  - Added `isekai.training.apprenticeship.enabled` contracts for apprenticeship sponsorship, supervision, readiness, and authority-safe crafting handoffs across item-crafting, spellcraft, and later dungeon-crafting families.
+  - Added validation helpers for apprenticeship readiness stages, supervision modes, output states, and supported crafting authority IDs.
 
 - **Changed**
   - (placeholder)

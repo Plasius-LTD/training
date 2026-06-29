@@ -1,8 +1,13 @@
 import {
   TRAINING_ACADEMIES_FEATURE_FLAG_ID,
+  TRAINING_APPRENTICESHIP_FEATURE_FLAG_ID,
+  TRAINING_APPRENTICESHIP_OUTPUT_STATES,
+  TRAINING_APPRENTICESHIP_READINESS_STAGES,
+  TRAINING_APPRENTICESHIP_SUPERVISION_MODES,
   TRAINING_TRUST_MARKER_SOURCES,
   TRAINING_ACADEMIC_PROGRESS_STAGES,
   TRAINING_ACADEMY_ADMISSION_DECISIONS,
+  TRAINING_CRAFTING_AUTHORITY_IDS,
   TRAINING_INSTRUCTION_ACCESS_LEVELS,
   TRAINING_TECHNIQUE_MASTERY_STATES,
   TRAINING_FEATURE_FLAG_ID,
@@ -16,7 +21,11 @@ import {
   createTrainingAcademicMissionPrerequisite,
   createTrainingAcademyAdmission,
   createTrainingAntiSpellFieldcraftDiscipline,
+  createTrainingApprenticeshipReadiness,
+  createTrainingApprenticeshipSupervision,
+  createTrainingApprenticeshipSponsorship,
   createTrainingBarracksDrill,
+  createTrainingCraftingAuthorityHandoff,
   createTrainingInstitution,
   createTrainingMartialTechnique,
   createTrainingMissionTechniqueUnlock,
@@ -32,7 +41,11 @@ import {
   isTrainingAcademyAdmissionDecision,
   isTrainingAntiSpellCounterWindow,
   isTrainingAntiSpellFieldcraftFamily,
+  isTrainingApprenticeshipOutputState,
+  isTrainingApprenticeshipReadinessStage,
+  isTrainingApprenticeshipSupervisionMode,
   isTrainingBarracksDrillDeliveryMode,
+  isTrainingCraftingAuthorityId,
   isTrainingInstructionAccessLevel,
   isTrainingMartialTechniqueFamily,
   isTrainingMartialTechniqueTrack,
@@ -102,6 +115,50 @@ describe("@plasius/training", () => {
       "field-tested",
       "validated",
     ]);
+  });
+
+  it("exports the apprenticeship feature flag and handoff vocabularies", () => {
+    expect(TRAINING_APPRENTICESHIP_FEATURE_FLAG_ID).toBe(
+      "isekai.training.apprenticeship.enabled"
+    );
+    expect(TRAINING_APPRENTICESHIP_READINESS_STAGES).toEqual([
+      "candidate",
+      "sponsored",
+      "supervised-practice",
+      "handoff-ready",
+    ]);
+    expect(TRAINING_APPRENTICESHIP_SUPERVISION_MODES).toEqual([
+      "shadowing",
+      "assisted-practice",
+      "supervised-production",
+    ]);
+    expect(TRAINING_APPRENTICESHIP_OUTPUT_STATES).toEqual([
+      "practice-only",
+      "supervised-output",
+      "mastered-output",
+    ]);
+    expect(TRAINING_CRAFTING_AUTHORITY_IDS).toEqual([
+      "item-crafting",
+      "spellcraft",
+      "dungeon-crafting",
+    ]);
+  });
+
+  it("guards valid apprenticeship vocabularies", () => {
+    expect(isTrainingApprenticeshipReadinessStage("handoff-ready")).toBe(true);
+    expect(isTrainingApprenticeshipReadinessStage("graduated")).toBe(false);
+    expect(isTrainingApprenticeshipSupervisionMode("assisted-practice")).toBe(
+      true
+    );
+    expect(isTrainingApprenticeshipSupervisionMode("solo-production")).toBe(
+      false
+    );
+    expect(isTrainingApprenticeshipOutputState("supervised-output")).toBe(
+      true
+    );
+    expect(isTrainingApprenticeshipOutputState("certified-output")).toBe(false);
+    expect(isTrainingCraftingAuthorityId("item-crafting")).toBe(true);
+    expect(isTrainingCraftingAuthorityId("commerce")).toBe(false);
   });
 
   it("exports the martial feature flag and bounded doctrine lists", () => {
@@ -303,6 +360,68 @@ describe("@plasius/training", () => {
     expect(Object.isFrozen(trackSelection.reasonCodes)).toBe(true);
   });
 
+  it("creates frozen apprenticeship sponsorship, supervision, readiness, and handoff models", () => {
+    const sponsorship = createTrainingApprenticeshipSponsorship({
+      sponsorshipId: "sponsorship-1",
+      apprenticeshipInstitutionId: "apprenticeship-1",
+      sponsorId: "guild-smith-1",
+      professionId: "smithing",
+      sponsoredTrack: "hybrid",
+      trustLevel: "trusted",
+      grantedAtIso: "2026-06-29T08:00:00.000Z",
+      missionRequirementCodes: ["complete-forge-observation"],
+      reasonCodes: ["mission-earned-sponsorship"],
+    });
+    const supervision = createTrainingApprenticeshipSupervision({
+      supervisionId: "supervision-1",
+      apprenticeshipInstitutionId: "apprenticeship-1",
+      supervisorId: "master-smith-1",
+      professionId: "smithing",
+      supervisionMode: "assisted-practice",
+      focusTrack: "hybrid",
+      startedAtIso: "2026-06-29T09:00:00.000Z",
+      checkpointAtIso: "2026-06-29T11:00:00.000Z",
+      taskCodes: ["forge-setup", "tool-maintenance"],
+      reasonCodes: ["supervisor-cleared"],
+    });
+    const readiness = createTrainingApprenticeshipReadiness({
+      readinessId: "readiness-1",
+      apprenticeshipInstitutionId: "apprenticeship-1",
+      professionId: "smithing",
+      stage: "handoff-ready",
+      outputState: "practice-only",
+      sponsorshipId: sponsorship.sponsorshipId,
+      supervisionId: supervision.supervisionId,
+      supportedAuthorityIds: ["item-crafting", "spellcraft"],
+      readyForHandoff: true,
+      updatedAtIso: "2026-06-29T12:00:00.000Z",
+      reasonCodes: ["practice-threshold-cleared"],
+    });
+    const handoff = createTrainingCraftingAuthorityHandoff({
+      handoffId: "handoff-1",
+      readinessId: readiness.readinessId,
+      authorityId: "item-crafting",
+      professionId: "smithing",
+      apprenticeshipStage: readiness.stage,
+      outputState: readiness.outputState,
+      eligible: true,
+      reasonCodes: ["external-authority-preserved"],
+    });
+
+    expect(sponsorship.sponsoredTrack).toBe("hybrid");
+    expect(supervision.supervisionMode).toBe("assisted-practice");
+    expect(readiness.outputState).toBe("practice-only");
+    expect(readiness.supportedAuthorityIds).toEqual([
+      "item-crafting",
+      "spellcraft",
+    ]);
+    expect(handoff.authorityId).toBe("item-crafting");
+    expect(Object.isFrozen(sponsorship.missionRequirementCodes)).toBe(true);
+    expect(Object.isFrozen(supervision.taskCodes)).toBe(true);
+    expect(Object.isFrozen(readiness.supportedAuthorityIds)).toBe(true);
+    expect(Object.isFrozen(handoff.reasonCodes)).toBe(true);
+  });
+
   it("creates frozen barracks drill and mission-earned unlock models", () => {
     const drill = createTrainingBarracksDrill({
       drillId: "drill-1",
@@ -495,6 +614,70 @@ describe("@plasius/training", () => {
     );
 
     expect(() =>
+      createTrainingApprenticeshipSupervision({
+        supervisionId: "supervision-1",
+        apprenticeshipInstitutionId: "apprenticeship-1",
+        supervisorId: "master-smith-1",
+        professionId: "smithing",
+        supervisionMode: "solo-production" as never,
+        focusTrack: "hybrid",
+        startedAtIso: "2026-06-29T09:00:00.000Z",
+        checkpointAtIso: "2026-06-29T11:00:00.000Z",
+        taskCodes: [],
+        reasonCodes: [],
+      })
+    ).toThrow(
+      "supervisionMode must be a supported apprenticeship supervision mode"
+    );
+
+    expect(() =>
+      createTrainingApprenticeshipReadiness({
+        readinessId: "readiness-1",
+        apprenticeshipInstitutionId: "apprenticeship-1",
+        professionId: "smithing",
+        stage: "sponsored",
+        outputState: "practice-only",
+        sponsorshipId: "sponsorship-1",
+        supportedAuthorityIds: ["item-crafting"],
+        readyForHandoff: true,
+        updatedAtIso: "2026-06-29T12:00:00.000Z",
+        reasonCodes: [],
+      })
+    ).toThrow(
+      "readyForHandoff requires the handoff-ready apprenticeship stage"
+    );
+
+    expect(() =>
+      createTrainingApprenticeshipReadiness({
+        readinessId: "readiness-1",
+        apprenticeshipInstitutionId: "apprenticeship-1",
+        professionId: "smithing",
+        stage: "handoff-ready",
+        outputState: "practice-only",
+        sponsorshipId: "sponsorship-1",
+        supportedAuthorityIds: [],
+        readyForHandoff: true,
+        updatedAtIso: "2026-06-29T12:00:00.000Z",
+        reasonCodes: [],
+      })
+    ).toThrow(
+      "supportedAuthorityIds must contain at least one supported crafting authority when readyForHandoff is true"
+    );
+
+    expect(() =>
+      createTrainingCraftingAuthorityHandoff({
+        handoffId: "handoff-1",
+        readinessId: "readiness-1",
+        authorityId: "commerce" as never,
+        professionId: "smithing",
+        apprenticeshipStage: "handoff-ready",
+        outputState: "practice-only",
+        eligible: true,
+        reasonCodes: [],
+      })
+    ).toThrow("authorityId must be a supported crafting authority id");
+
+    expect(() =>
       createTrainingBarracksDrill({
         drillId: "drill-1",
         institutionId: "barracks-1",
@@ -506,6 +689,41 @@ describe("@plasius/training", () => {
         antiSpellFamilies: [],
       })
     ).toThrow("track must be an internalized or hybrid martial technique track");
+
+    expect(() =>
+      createTrainingMissionTechniqueUnlock({
+        unlockId: "unlock-1",
+        missionId: "mission-1",
+        techniqueId: "technique-1",
+        institutionId: "barracks-1",
+        track: "hybrid",
+        techniqueFamily: "spell-catalogue" as never,
+        unlockedAtIso: "2026-06-23T06:30:00.000Z",
+        reasonCodes: [],
+      })
+    ).toThrow("techniqueFamily must be a supported martial technique family");
+
+    expect(() =>
+      createTrainingMartialTechnique({
+        techniqueId: "technique-1",
+        institutionId: "barracks-1",
+        title: "Invalid martial track",
+        track: "externalized" as never,
+        family: "stance",
+        expressionNote: "invalid",
+      })
+    ).toThrow("track must be an internalized or hybrid martial technique track");
+
+    expect(() =>
+      createTrainingMartialTechnique({
+        techniqueId: "technique-1",
+        institutionId: "barracks-1",
+        title: "Invalid martial family",
+        track: "hybrid",
+        family: "spell-catalogue" as never,
+        expressionNote: "invalid",
+      })
+    ).toThrow("family must be a supported martial technique family");
 
     expect(() =>
       createTrainingMissionTechniqueUnlock({
@@ -537,6 +755,30 @@ describe("@plasius/training", () => {
         disciplineId: "discipline-1",
         institutionId: "barracks-1",
         title: "Invalid fieldcraft",
+        track: "externalized" as never,
+        family: "grounding",
+        boundedCounterWindows: [],
+        prohibitedCapabilityCodes: [],
+      })
+    ).toThrow("track must be an internalized or hybrid martial technique track");
+
+    expect(() =>
+      createTrainingAntiSpellFieldcraftDiscipline({
+        disciplineId: "discipline-1",
+        institutionId: "barracks-1",
+        title: "Invalid fieldcraft family",
+        track: "internalized",
+        family: "total-nullification" as never,
+        boundedCounterWindows: [],
+        prohibitedCapabilityCodes: [],
+      })
+    ).toThrow("family must be a supported bounded anti-spell family");
+
+    expect(() =>
+      createTrainingAntiSpellFieldcraftDiscipline({
+        disciplineId: "discipline-1",
+        institutionId: "barracks-1",
+        title: "Invalid fieldcraft window",
         track: "internalized",
         family: "grounding",
         boundedCounterWindows: ["permanence" as never],
