@@ -13,7 +13,7 @@ Define the minimal progression payload and large-cohort assumptions exported by
 - `trainingProgressionFieldPolicies` documents the sensitivity, retention, and
   justification for every progression field.
 - `trainingPrivacyScaleRollout` publishes the inherited
-  `isekai.training-progression.privacy-scale.enabled` control and local env
+  `harmony.training-progression.privacy-scale.enabled` control and local env
   override.
 - `defaultTrainingScaleAssumptions` and `createTrainingScaleAssumptions`
   document and validate the expected operating envelope for large learner

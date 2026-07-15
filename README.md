@@ -271,7 +271,7 @@ console.log(
 ## Privacy And Scale Baseline
 
 The package exports an inherited rollout descriptor for the cross-repo feature
-flag `isekai.training-progression.privacy-scale.enabled`.
+flag `harmony.training-progression.privacy-scale.enabled`.
 
 When that rollout is enabled, package consumers should prefer the minimal
 `TrainingProgressionRecord` contract:
@@ -288,7 +288,7 @@ When that rollout is enabled, package consumers should prefer the minimal
 ## Martial Doctrine Surface
 
 The package also exports the canonical authority-side martial training vocabulary
-for feature flag `isekai.training.martial.enabled`.
+for feature flag `harmony.training.martial.enabled`.
 
 - `createTrainingBarracksDrill` models barracks instruction through drills,
   sparring, service obligations, supervised missions, and rank-gated lessons.
@@ -303,7 +303,7 @@ for feature flag `isekai.training.martial.enabled`.
 ## Academic Progression Surface
 
 The package also exports the academy-track authority vocabulary for feature flag
-`isekai.training.academies.enabled`.
+`harmony.training.academies.enabled`.
 
 - `createTrainingAcademicMissionPrerequisite` models academy-gating mission
   requirements with explicit minimum stage and trust expectations.
@@ -320,7 +320,7 @@ The package also exports the academy-track authority vocabulary for feature flag
 ## Apprenticeship Handoff Surface
 
 The package also exports the apprenticeship-routing vocabulary for feature flag
-`isekai.training.apprenticeship.enabled`.
+`harmony.training.apprenticeship.enabled`.
 
 - `createTrainingApprenticeshipSponsorship` records who sponsored the
   apprenticeship entry and which profession track they unlocked.
@@ -333,8 +333,27 @@ The package also exports the apprenticeship-routing vocabulary for feature flag
   snapshot for item-crafting, spellcraft, and later dungeon-crafting systems
   without moving execution truth into the Player System.
 
+## Project Harmony namespace migration
+
+The Project Harmony cutover is a breaking public-contract change. Consumers
+moving to the next major release must replace these exact keys before enabling
+`harmony.namespace-cutover.enabled`:
+
+| Previous key | Harmony key |
+| --- | --- |
+| `isekai.training.institutions.enabled` | `harmony.training.institutions.enabled` |
+| `isekai.training.academies.enabled` | `harmony.training.academies.enabled` |
+| `isekai.training.apprenticeship.enabled` | `harmony.training.apprenticeship.enabled` |
+| `isekai.training.martial.enabled` | `harmony.training.martial.enabled` |
+| `isekai.training-progression.privacy-scale.enabled` | `harmony.training-progression.privacy-scale.enabled` |
+
+The package publishes only Harmony values. It provides no aliases, dual-read
+parsing, environment fallback, or runtime translation for the previous product
+namespace.
+
 ## Governance
 
 - ADRs: [docs/adrs](./docs/adrs)
 - TDRs: [docs/tdrs](./docs/tdrs)
 - Design notes: [docs/design](./docs/design)
+- Namespace rollback: disable `harmony.namespace-cutover.enabled`, restore the previous coordinated package majors, and complete the approved reverse stored-value migration before re-enabling consumers.

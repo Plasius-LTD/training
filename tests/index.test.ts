@@ -62,6 +62,9 @@ describe("@plasius/training", () => {
   it("exports the package descriptor", () => {
     expect(packageDescriptor.packageName).toBe("@plasius/training");
     expect(packageDescriptor.featureFlagId).toBe(TRAINING_FEATURE_FLAG_ID);
+    expect(TRAINING_FEATURE_FLAG_ID).toBe(
+      "harmony.training.institutions.enabled"
+    );
   });
 
   it("creates a training institution", () => {
@@ -82,7 +85,7 @@ describe("@plasius/training", () => {
 
   it("exports the academies feature flag and academic progression vocabularies", () => {
     expect(TRAINING_ACADEMIES_FEATURE_FLAG_ID).toBe(
-      "isekai.training.academies.enabled"
+      "harmony.training.academies.enabled"
     );
     expect(TRAINING_TRUST_MARKER_SOURCES).toEqual([
       "system",
@@ -119,7 +122,7 @@ describe("@plasius/training", () => {
 
   it("exports the apprenticeship feature flag and handoff vocabularies", () => {
     expect(TRAINING_APPRENTICESHIP_FEATURE_FLAG_ID).toBe(
-      "isekai.training.apprenticeship.enabled"
+      "harmony.training.apprenticeship.enabled"
     );
     expect(TRAINING_APPRENTICESHIP_READINESS_STAGES).toEqual([
       "candidate",
@@ -163,7 +166,7 @@ describe("@plasius/training", () => {
 
   it("exports the martial feature flag and bounded doctrine lists", () => {
     expect(TRAINING_MARTIAL_FEATURE_FLAG_ID).toBe(
-      "isekai.training.martial.enabled"
+      "harmony.training.martial.enabled"
     );
     expect(TRAINING_MARTIAL_TECHNIQUE_TRACKS).toEqual([
       "internalized",
@@ -254,8 +257,30 @@ describe("@plasius/training", () => {
     expect(trainingPrivacyScaleRollout.featureFlagId).toBe(
       TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID
     );
+    expect(TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID).toBe(
+      "harmony.training-progression.privacy-scale.enabled"
+    );
     expect(trainingPrivacyScaleRollout.envOverride).toBe(
       "TRAINING_PRIVACY_SCALE_ENABLED"
+    );
+  });
+
+  it("contains no legacy Isekai namespace in exported runtime rollout contracts", () => {
+    const rolloutContracts = [
+      TRAINING_FEATURE_FLAG_ID,
+      TRAINING_ACADEMIES_FEATURE_FLAG_ID,
+      TRAINING_APPRENTICESHIP_FEATURE_FLAG_ID,
+      TRAINING_MARTIAL_FEATURE_FLAG_ID,
+      TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID,
+      packageDescriptor.featureFlagId,
+      trainingPrivacyScaleRollout.featureFlagId,
+    ];
+
+    expect(rolloutContracts.every((value) => value.startsWith("harmony."))).toBe(
+      true
+    );
+    expect(rolloutContracts.some((value) => value.startsWith("isekai."))).toBe(
+      false
     );
   });
 
