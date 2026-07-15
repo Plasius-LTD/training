@@ -8,6 +8,20 @@ All notable changes to this project will be documented in this file.
   - (placeholder)
 
 - **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [1.0.0] - 2026-07-15
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
   - **Breaking:** replaced all exported training, academy, apprenticeship, martial, and privacy-scale rollout values from `isekai.*` to `harmony.*`. The next release is a major version and intentionally provides no aliases, dual-read parsing, or legacy runtime fallback.
 
 - **Fixed**
@@ -86,3 +100,4 @@ All notable changes to this project will be documented in this file.
 [0.1.5]: https://github.com/Plasius-LTD/training/releases/tag/v0.1.5
 [0.1.6]: https://github.com/Plasius-LTD/training/releases/tag/v0.1.6
 [0.2.0]: https://github.com/Plasius-LTD/training/releases/tag/v0.2.0
+[1.0.0]: https://github.com/Plasius-LTD/training/releases/tag/v1.0.0
