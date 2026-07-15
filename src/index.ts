@@ -299,14 +299,14 @@ export interface TrainingAntiSpellFieldcraftDiscipline {
 
 export const TRAINING_PACKAGE = "@plasius/training";
 export const TRAINING_ENV_PREFIX = "TRAINING";
-export const TRAINING_FEATURE_FLAG_ID = "isekai.training.institutions.enabled";
+export const TRAINING_FEATURE_FLAG_ID = "harmony.training.institutions.enabled";
 export const TRAINING_ACADEMIES_FEATURE_FLAG_ID =
-  "isekai.training.academies.enabled";
+  "harmony.training.academies.enabled";
 export const TRAINING_APPRENTICESHIP_FEATURE_FLAG_ID =
-  "isekai.training.apprenticeship.enabled";
-export const TRAINING_MARTIAL_FEATURE_FLAG_ID = "isekai.training.martial.enabled";
+  "harmony.training.apprenticeship.enabled";
+export const TRAINING_MARTIAL_FEATURE_FLAG_ID = "harmony.training.martial.enabled";
 export const TRAINING_PRIVACY_SCALE_FEATURE_FLAG_ID =
-  "isekai.training-progression.privacy-scale.enabled";
+  "harmony.training-progression.privacy-scale.enabled";
 export const TRAINING_PRIVACY_SCALE_ENV_OVERRIDE =
   "TRAINING_PRIVACY_SCALE_ENABLED";
 export const TRAINING_TRUST_MARKER_SOURCES = [
