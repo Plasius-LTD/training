@@ -357,3 +357,13 @@ namespace.
 - TDRs: [docs/tdrs](./docs/tdrs)
 - Design notes: [docs/design](./docs/design)
 - Namespace rollback: disable `harmony.namespace-cutover.enabled`, restore the previous coordinated package majors, and complete the approved reverse stored-value migration before re-enabling consumers.
+
+<!-- BEGIN PLASIUS RELEASE INTEGRITY -->
+## Release integrity
+
+CI keeps the administrative contributor registry outside Git and npm package
+artifacts using exact, case-normalised path checks. CI runs on approved
+self-hosted runners. Release preparation and npm publication use GitHub-hosted
+runners with Node.js 24.18.0 LTS. CD remains disabled until the npm trusted
+publisher binding is verified and the legacy token fallback is removed.
+<!-- END PLASIUS RELEASE INTEGRITY -->
