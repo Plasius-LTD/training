@@ -11,6 +11,20 @@ All notable changes to this project will be documented in this file.
   - (placeholder)
 
 - **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [1.0.1] - 2026-08-01
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
   - Reject malformed institution, reliability-policy, and transition-event payloads before freezing training contracts.
 
 - **Security**
@@ -102,3 +116,4 @@ All notable changes to this project will be documented in this file.
 [0.1.6]: https://github.com/Plasius-LTD/training/releases/tag/v0.1.6
 [0.2.0]: https://github.com/Plasius-LTD/training/releases/tag/v0.2.0
 [1.0.0]: https://github.com/Plasius-LTD/training/releases/tag/v1.0.0
+[1.0.1]: https://github.com/Plasius-LTD/training/releases/tag/v1.0.1
