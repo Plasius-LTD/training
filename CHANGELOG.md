@@ -8,12 +8,14 @@ All notable changes to this project will be documented in this file.
   - (placeholder)
 
 - **Changed**
+  - Bound npm publication to the exact prepared `main` commit after successful push-triggered CI.
   - (placeholder)
 
 - **Fixed**
   - (placeholder)
 
 - **Security**
+  - Removed the npm write-token path, added a fail-closed npm 11.5.1-or-newer OIDC guard, and denied fork PR code access to self-hosted CI.
   - (placeholder)
 
 ## [1.0.1] - 2026-08-01
